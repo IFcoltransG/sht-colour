@@ -1,9 +1,11 @@
 [package]
 name = "sht-colour"
 version = "0.1.0"
+description = "Conversion tools for SHT colours."
 authors = ["IFcoltransG <47414286+IFcoltransG@users.noreply.github.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+repository = "https://github.com/IFcoltransG/sht-colour"
+readme = "README.md"
+license = "MIT"
 
 [dependencies]
