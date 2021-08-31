@@ -64,3 +64,6 @@ where
 {
     T::from_str_radix(digits, 16).map_err(|_| ParseHexError::DigitParseError)
 }
+
+#[cfg(test)]
+mod tests;

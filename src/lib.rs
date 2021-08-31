@@ -24,6 +24,3 @@ pub fn parse_sht<T: Clone + Integer + Unsigned>(_input: &str) -> Option<sht::SHT
 pub fn parse_rgb<T: Integer + Unsigned>(_input: &str) -> Option<rgb::RGB<T>> {
     None
 }
-
-#[cfg(test)]
-mod tests;
