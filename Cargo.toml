@@ -9,3 +9,7 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
+num = "0.4"
+unicode-segmentation = "1.2.1"
+itertools = "0.10.1"
+nom = "7.0.0"
