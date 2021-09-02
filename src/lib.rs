@@ -4,6 +4,9 @@ use num::{Integer, Unsigned};
 mod rgb;
 mod sht;
 
+#[cfg(test)]
+mod lib_tests;
+
 pub fn sht_to_rgb<N, T>(_input: sht::SHT<N>) -> rgb::RGB<T>
 where
     N: Clone + Integer + Unsigned,
