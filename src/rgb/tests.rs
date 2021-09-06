@@ -1,5 +1,5 @@
 #[test]
-fn rgb_parse_success() {
+fn parse_success() {
     use super::RGB;
     assert_eq!("#123".parse::<RGB<u8>>(), Ok(RGB::new(1, 2, 3)));
     assert_eq!(
@@ -9,7 +9,7 @@ fn rgb_parse_success() {
 }
 
 #[test]
-fn rgb_parse_failure() {
+fn parse_failure() {
     use super::{ParseHexError, RGB};
     //failure
     assert_eq!("".parse::<RGB<u8>>(), Err(ParseHexError::EmptyCode));
