@@ -1,7 +1,7 @@
 use super::{ChannelRatios, ColourChannel, ParsePropertyError, SecondaryColour, SHT};
 use nom::{
     branch::alt,
-    bytes::complete::{tag, tag_no_case, take},
+    bytes::complete::{tag_no_case, take},
     character::complete::digit1,
     combinator::{fail, map, map_res, opt, success, value, verify},
     multi::fold_many1,
@@ -16,7 +16,7 @@ pub fn duodecimal_digit(input: &str) -> IResult<&str, &str> {
     // ensure only one digit is taken
     let (input, first) = take(1u8)(input)?;
     // handle errors
-    match alt((tag("X"), tag("E"), digit1))(first)? {
+    match alt((tag_no_case("X"), tag_no_case("E"), digit1))(first)? {
         ("", result) => Ok((input, result)),
         _ => fail(input),
     }
@@ -141,7 +141,7 @@ where
                 ChannelRatios::ThreeBrightestChannels,
                 Some(Ratio::one()),
             ),
-            tag("W"),
+            tag_no_case("W"),
         ),
     ))(input)
 }
