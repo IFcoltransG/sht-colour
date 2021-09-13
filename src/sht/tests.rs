@@ -8,8 +8,8 @@ fn value_success() {
                 primary: ColourChannel::Blue,
                 direction_blend: Some((ColourChannel::Red, Ratio::new(1, 2))),
             },
-            Ratio::new(1, 2),
-            Ratio::new(1, 2),
+            Ratio::new(1, 3),
+            Ratio::new(1, 4),
         ),
         (
             ChannelRatios::OneBrightestChannel {
@@ -17,19 +17,19 @@ fn value_success() {
                 direction_blend: None,
             },
             Ratio::new(1, 2),
-            Ratio::new(1, 2),
+            Ratio::new(1, 3),
         ),
         (
             ChannelRatios::TwoBrightestChannels {
                 secondary: SecondaryColour::Cyan,
             },
             Ratio::new(1, 2),
-            Ratio::new(1, 2),
+            Ratio::new(1, 3),
         ),
         (
             ChannelRatios::ThreeBrightestChannels,
             Ratio::new(1, 2),
-            Ratio::new(1, 2),
+            Ratio::new(1, 3),
         ),
         (
             ChannelRatios::ThreeBrightestChannels,
@@ -45,7 +45,7 @@ fn value_success() {
     .iter()
     {
         assert_eq!(
-            SHT::<u32>::new(*channel_ratios, *tint, *shade),
+            SHT::<u32>::new(*channel_ratios, *shade, *tint),
             Ok(SHT::<u32> {
                 channel_ratios: *channel_ratios,
                 tint: *tint,
@@ -65,8 +65,8 @@ fn value_failure() {
                 primary: ColourChannel::Blue,
                 direction_blend: None
             },
+            Ratio::new(0, 1), // error
             Ratio::new(1, 2),
-            Ratio::new(0, 1) // error
         ),
         Err(vec![SHTValueError::PrimaryShadeZero])
     );
@@ -76,8 +76,8 @@ fn value_failure() {
                 primary: ColourChannel::Blue,
                 direction_blend: None
             },
+            Ratio::new(1, 2),
             Ratio::new(1, 1), // error
-            Ratio::new(1, 2)
         ),
         Err(vec![SHTValueError::PrimaryTintOne])
     );
@@ -86,8 +86,8 @@ fn value_failure() {
             ChannelRatios::TwoBrightestChannels {
                 secondary: SecondaryColour::Cyan
             },
+            Ratio::new(0, 1), // error
             Ratio::new(1, 2),
-            Ratio::new(0, 1) // error
         ),
         Err(vec![SHTValueError::SecondaryShadeZero])
     );
@@ -96,8 +96,8 @@ fn value_failure() {
             ChannelRatios::TwoBrightestChannels {
                 secondary: SecondaryColour::Cyan
             },
+            Ratio::new(1, 2),
             Ratio::new(1, 1), // error
-            Ratio::new(1, 2)
         ),
         Err(vec![SHTValueError::SecondaryTintOne])
     );
@@ -111,7 +111,7 @@ fn value_failure() {
                 ))
             },
             Ratio::new(1, 2),
-            Ratio::new(1, 2)
+            Ratio::new(1, 2),
         ),
         Err(vec![SHTValueError::DirectionEqualsPrimary])
     );
@@ -121,19 +121,14 @@ fn value_failure() {
                 primary: ColourChannel::Blue,
                 direction_blend: Some((ColourChannel::Red, Ratio::new(1, 2))),
             },
-            Ratio::new(2, 1), // error
             Ratio::new(1, 2),
+            Ratio::new(2, 1), // error
         ),
         SHT::<u32>::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Blue,
                 direction_blend: Some((ColourChannel::Red, Ratio::new(1, 2))),
             },
-            Ratio::new(1, 2),
-            Ratio::new(2, 1), // error
-        ),
-        SHT::<u32>::new(
-            ChannelRatios::ThreeBrightestChannels,
             Ratio::new(2, 1), // error
             Ratio::new(1, 2),
         ),
@@ -141,6 +136,11 @@ fn value_failure() {
             ChannelRatios::ThreeBrightestChannels,
             Ratio::new(1, 2),
             Ratio::new(2, 1), // error
+        ),
+        SHT::<u32>::new(
+            ChannelRatios::ThreeBrightestChannels,
+            Ratio::new(2, 1), // error
+            Ratio::new(1, 2),
         ),
         SHT::<u32>::new(
             ChannelRatios::OneBrightestChannel {
@@ -162,7 +162,7 @@ fn value_failure() {
                 direction_blend: Some((ColourChannel::Red, Ratio::new(0, 1))) // error
             },
             Ratio::new(1, 2),
-            Ratio::new(1, 2)
+            Ratio::new(1, 2),
         ),
         Err(vec![SHTValueError::BlendZero])
     );
@@ -173,7 +173,7 @@ fn value_failure() {
                 direction_blend: Some((ColourChannel::Red, Ratio::new(1, 1))) // error
             },
             Ratio::new(1, 2),
-            Ratio::new(1, 2)
+            Ratio::new(1, 2),
         ),
         Err(vec![SHTValueError::BlendOne])
     );
@@ -181,24 +181,164 @@ fn value_failure() {
 
 #[test]
 fn parse_success() {
-    use super::{ChannelRatios, ParsePropertyError, SHT};
+    use super::{ChannelRatios, ColourChannel, ParsePropertyError, SecondaryColour, SHT};
     use num::rational::Ratio;
     assert_eq!(
         "W".parse::<SHT<u8>>(),
         SHT::new(
             ChannelRatios::ThreeBrightestChannels,
-            Ratio::new(0, 1),
+            Ratio::new(1, 1),
             Ratio::new(1, 1)
         )
         .map_err(ParsePropertyError::ValueErrors)
     );
-    todo!()
+    assert_eq!(
+        "8r6g3...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+            },
+            Ratio::new(2, 3),
+            Ratio::new(1, 4)
+        )
+        .ok()
+    );
+    assert_eq!(
+        "r...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: None
+            },
+            Ratio::new(1, 1),
+            Ratio::new(0, 1),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "8r...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: None
+            },
+            Ratio::new(2, 3),
+            Ratio::new(0, 1),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "r3...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: None
+            },
+            Ratio::new(1, 1),
+            Ratio::new(1, 4),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "6r3...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: None
+            },
+            Ratio::new(1, 2),
+            Ratio::new(1, 4),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "r6g...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+            },
+            Ratio::new(1, 1),
+            Ratio::new(0, 1),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "8r6g...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+            },
+            Ratio::new(2, 3),
+            Ratio::new(0, 1),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "8r6g3...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+            },
+            Ratio::new(2, 3),
+            Ratio::new(1, 4),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "8y3...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::TwoBrightestChannels {
+                secondary: SecondaryColour::Yellow
+            },
+            Ratio::new(2, 3),
+            Ratio::new(1, 4),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "6...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::ThreeBrightestChannels,
+            Ratio::new(1, 1),
+            Ratio::new(1, 2),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "0...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::ThreeBrightestChannels,
+            Ratio::new(0, 1),
+            Ratio::new(0, 1),
+        )
+        .ok()
+    );
+    assert_eq!(
+        "W...".parse::<SHT<u8>>().ok(),
+        SHT::new(
+            ChannelRatios::ThreeBrightestChannels,
+            Ratio::new(1, 1),
+            Ratio::new(1, 1),
+        )
+        .ok()
+    );
 }
 
 #[test]
 fn parse_failure() {
     use super::{ParsePropertyError, SHT};
-    assert_eq!("".parse::<SHT<u8>>(), Err(ParsePropertyError::EmptyCode));
+    use nom::{error::Error, error::ErrorKind};
+    assert_eq!(
+        "".parse::<SHT<u8>>(),
+        Err(ParsePropertyError::ParseFailure(Error::new(
+            "".to_owned(),
+            ErrorKind::Tag
+        )))
+    );
     todo!()
 }
 
@@ -245,57 +385,317 @@ fn parse_digits() {
 
 #[test]
 fn parse_quantity_success() {
-    use super::parser::quantity_with_precision;
+    use super::parser::quantity;
     use num::rational::Ratio;
+    assert_eq!(quantity("1C"), Ok(("C", Ratio::new(1u32, 12))));
+    assert_eq!(quantity("11C"), Ok(("C", Ratio::new(13u32, 144))));
+    assert_eq!(quantity("EEEC"), Ok(("C", Ratio::new(1727u32, 1728))));
+    assert_eq!(quantity("EEC"), Ok(("C", Ratio::new(143u32, 144))));
+    // 144 is the largest power of 12 that fits in a u8
+    assert_eq!(quantity("EEEEEEC"), Ok(("C", Ratio::new(143u8, 144))));
+    // 20736 is the largest power of 12 that fits in a u16
+    assert_eq!(quantity("EEEEEEC"), Ok(("C", Ratio::new(20735u16, 20736))));
+    // u32 supports all 6 digits of precision
     assert_eq!(
-        quantity_with_precision(3)("1C"),
-        Ok(("C", Ratio::new(1u32, 12)))
-    );
-    assert_eq!(
-        quantity_with_precision(3)("11C"),
-        Ok(("C", Ratio::new(13u32, 144)))
-    );
-    assert_eq!(
-        quantity_with_precision(3)("EEEC"),
-        Ok(("C", Ratio::new(1727u32, 1728)))
-    );
-    assert_eq!(
-        quantity_with_precision(3)("EEC"),
-        Ok(("C", Ratio::new(143u32, 144)))
-    );
-    assert_eq!(
-        quantity_with_precision(1)("EEC"),
-        Ok(("C", Ratio::new(11u32, 12)))
+        quantity("EEEEEEC"),
+        Ok(("C", Ratio::new(2985983u32, 2985984)))
     );
 }
 
 #[test]
 fn parse_quantity_error() {
-    use super::parser::{quantity_with_precision, RatioParseError};
-    use nom::{Err, error::ErrorKind};
+    use super::parser::quantity;
+    use nom::{
+        error::{Error, ErrorKind},
+        Err,
+    };
     assert_eq!(
-        quantity_with_precision::<u8>(1)("C"),
-        Err(nom::Err::Error(RatioParseError::Nom("C", ErrorKind::Many1)))
+        quantity::<u8>("C"),
+        Err(Err::Error(Error::new("C", ErrorKind::Many1)))
     );
 }
 
 #[test]
-fn parse_direction_blend() {
+fn parse_direction_blend_success() {
     use super::{parser::direction_blend, ColourChannel};
     use num::rational::Ratio;
     assert_eq!(
-        direction_blend(4)("34EX5RC"),
+        direction_blend("34EXRC"),
         Ok(("C", (ColourChannel::Red, Ratio::new(5902u32, 20736))))
     );
-    unimplemented!();
+    assert_eq!(
+        direction_blend("3GC"),
+        Ok(("C", (ColourChannel::Green, Ratio::new(3u32, 12))))
+    );
+}
+
+#[test]
+fn parse_direction_blend_failure() {
+    use super::parser::direction_blend;
+    use nom::{
+        error::{Error, ErrorKind},
+        Err,
+    };
+    assert_eq!(
+        direction_blend::<u8>("..."),
+        Err(Err::Error(Error::new("...", ErrorKind::Many1)))
+    );
+    assert_eq!(
+        direction_blend::<u8>("R1..."),
+        Err(Err::Error(Error::new("R1...", ErrorKind::Many1)))
+    );
+    assert_eq!(
+        direction_blend::<u8>("R..."),
+        Err(Err::Error(Error::new("R...", ErrorKind::Many1)))
+    );
+    assert_eq!(
+        direction_blend::<u8>("1..."),
+        Err(Err::Error(Error::new("...", ErrorKind::Tag)))
+    );
 }
 
 #[test]
 fn parse_channel_ratios() {
-    unimplemented!();
+    use super::{parser::channel_ratios, ChannelRatios, ColourChannel, SecondaryColour};
+    use nom::{
+        error::{Error, ErrorKind},
+        Err,
+    };
+    use num::rational::Ratio;
+    assert_eq!(
+        channel_ratios::<u8>("R..."),
+        Ok((
+            "...",
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: None
+            }
+        ))
+    );
+    assert_eq!(
+        channel_ratios::<u16>("R123G..."),
+        Ok((
+            "...",
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: Some((ColourChannel::Green, Ratio::new(171, 1728)))
+            }
+        ))
+    );
+    assert_eq!(
+        channel_ratios::<u16>("R123..."),
+        Ok((
+            "123...",
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Red,
+                direction_blend: None
+            }
+        ))
+    );
+    assert_eq!(
+        channel_ratios::<u16>("G..."),
+        Ok((
+            "...",
+            ChannelRatios::OneBrightestChannel {
+                primary: ColourChannel::Green,
+                direction_blend: None
+            }
+        ))
+    );
+    assert_eq!(
+        channel_ratios::<u16>("C..."),
+        Ok((
+            "...",
+            ChannelRatios::TwoBrightestChannels {
+                secondary: SecondaryColour::Cyan
+            }
+        ))
+    );
+    assert_eq!(
+        channel_ratios::<u8>("..."),
+        Err(Err::Error(Error::new("...", ErrorKind::Tag)))
+    );
+    assert_eq!(
+        channel_ratios::<u16>("123R..."),
+        Err(Err::Error(Error::new("123R...", ErrorKind::Tag)))
+    );
 }
 
 #[test]
 fn parse_sht_data() {
+    use super::{parser::sht_data, ChannelRatios, ColourChannel, SecondaryColour};
+    use num::rational::Ratio;
+    assert_eq!(
+        sht_data::<u8>("8r6g3..."),
+        Ok((
+            "...",
+            (
+                Some(Ratio::new(2, 3)),
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+                },
+                Some(Ratio::new(1, 4))
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("r..."),
+        Ok((
+            "...",
+            (
+                None,
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: None
+                },
+                None,
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("8r..."),
+        Ok((
+            "...",
+            (
+                Some(Ratio::new(2, 3)),
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: None
+                },
+                None,
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("r3..."),
+        Ok((
+            "...",
+            (
+                None,
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: None
+                },
+                Some(Ratio::new(1, 4)),
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("6r3..."),
+        Ok((
+            "...",
+            (
+                Some(Ratio::new(1, 2)),
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: None
+                },
+                Some(Ratio::new(1, 4)),
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("r6g..."),
+        Ok((
+            "...",
+            (
+                None,
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+                },
+                None,
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("8r6g..."),
+        Ok((
+            "...",
+            (
+                Some(Ratio::new(2, 3)),
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+                },
+                None,
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("8r6g3..."),
+        Ok((
+            "...",
+            (
+                Some(Ratio::new(2, 3)),
+                ChannelRatios::OneBrightestChannel {
+                    primary: ColourChannel::Red,
+                    direction_blend: Some((ColourChannel::Green, Ratio::new(1, 2)))
+                },
+                Some(Ratio::new(1, 4)),
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("8y3..."),
+        Ok((
+            "...",
+            (
+                Some(Ratio::new(2, 3)),
+                ChannelRatios::TwoBrightestChannels {
+                    secondary: SecondaryColour::Yellow
+                },
+                Some(Ratio::new(1, 4)),
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("6..."),
+        Ok((
+            "...",
+            (
+                None,
+                ChannelRatios::ThreeBrightestChannels,
+                Some(Ratio::new(1, 2)),
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("0..."),
+        Ok((
+            "...",
+            (
+                Some(Ratio::new(0, 1)),
+                ChannelRatios::ThreeBrightestChannels,
+                None,
+            )
+        ))
+    );
+    assert_eq!(
+        sht_data::<u8>("W..."),
+        Ok((
+            "...",
+            (
+                None,
+                ChannelRatios::ThreeBrightestChannels,
+                Some(Ratio::new(1, 1)),
+            )
+        ))
+    );
+}
+
+#[test]
+fn sht_parse_success() {
+    todo!()
+}
+
+#[test]
+fn sht_parse_failure() {
+    todo!()
+}
+
+#[test]
+fn case_works() {
     unimplemented!();
 }

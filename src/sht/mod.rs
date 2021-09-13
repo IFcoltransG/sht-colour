@@ -1,11 +1,25 @@
-use num::{rational::Ratio, Integer, One, Unsigned, Zero};
+use nom::error::Error;
+use num::{
+    pow::Pow, rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero,
+};
+use parser::parse_sht;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 #[non_exhaustive]
 pub enum ParsePropertyError {
     ValueErrors(Vec<SHTValueError>),
-    EmptyCode,
+    ParseFailure(Error<String>),
+}
+
+impl From<Error<&str>> for ParsePropertyError {
+    fn from(value: Error<&str>) -> Self {
+        match value {
+            Error { input, code } => {
+                ParsePropertyError::ParseFailure(Error::new(input.to_owned(), code))
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -30,6 +44,7 @@ pub enum ColourChannel {
     Green,
     Blue,
 }
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum SecondaryColour {
     Cyan,
@@ -52,20 +67,20 @@ pub enum ChannelRatios<T: Clone + Integer + Unsigned> {
 #[derive(Debug, PartialEq)]
 pub struct SHT<T: Clone + Integer + Unsigned> {
     channel_ratios: ChannelRatios<T>,
-    tint: Ratio<T>,  // None=0
     shade: Ratio<T>, // None=1
+    tint: Ratio<T>,  // None=0
 }
 
 impl<T: Clone + Integer + Unsigned> SHT<T> {
     pub fn new(
         channel_ratios: ChannelRatios<T>,
-        tint: Ratio<T>,
         shade: Ratio<T>,
+        tint: Ratio<T>,
     ) -> Result<Self, Vec<SHTValueError>> {
         let code = SHT {
             channel_ratios,
-            tint,
             shade,
+            tint,
         };
         match code.normal() {
             Ok(code) => Ok(code),
@@ -80,8 +95,8 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
     fn normal(self: Self) -> Result<Self, (Vec<SHTValueError>, Option<Self>)> {
         let Self {
             mut channel_ratios,
-            mut tint,
             mut shade,
+            mut tint,
         } = self;
         // validate fields:
         let mut usable = true;
@@ -164,11 +179,20 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
 
 impl<T> FromStr for SHT<T>
 where
-    T: Clone + Integer + Unsigned + FromStr,
+    T: Clone
+        + Integer
+        + Unsigned
+        + FromStr
+        + From<u8>
+        + CheckedMul
+        + CheckedAdd
+        + CheckedDiv
+        + Pow<T, Output = T>,
 {
     type Err = ParsePropertyError;
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        parse_sht(s)
     }
 }
 
