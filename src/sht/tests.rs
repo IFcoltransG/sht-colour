@@ -181,19 +181,10 @@ fn value_failure() {
 
 #[test]
 fn parse_success() {
-    use super::{ChannelRatios, ColourChannel, ParsePropertyError, SecondaryColour, SHT};
+    use super::{ChannelRatios, ColourChannel, SecondaryColour, SHT};
     use num::rational::Ratio;
     assert_eq!(
-        "W".parse::<SHT<u8>>(),
-        SHT::new(
-            ChannelRatios::ThreeBrightestChannels,
-            Ratio::new(1, 1),
-            Ratio::new(1, 1)
-        )
-        .map_err(ParsePropertyError::ValueErrors)
-    );
-    assert_eq!(
-        "8r6g3...".parse::<SHT<u8>>().ok(),
+        "8r6g3".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -205,7 +196,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "r...".parse::<SHT<u8>>().ok(),
+        "r".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -217,7 +208,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "8r...".parse::<SHT<u8>>().ok(),
+        "8r".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -229,7 +220,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "r3...".parse::<SHT<u8>>().ok(),
+        "r3".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -241,7 +232,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "6r3...".parse::<SHT<u8>>().ok(),
+        "6r3".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -253,7 +244,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "r6g...".parse::<SHT<u8>>().ok(),
+        "r6g".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -265,7 +256,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "8r6g...".parse::<SHT<u8>>().ok(),
+        "8r6g".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -277,7 +268,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "8r6g3...".parse::<SHT<u8>>().ok(),
+        "8r6g3".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Red,
@@ -289,7 +280,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "8y3...".parse::<SHT<u8>>().ok(),
+        "8y3".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::TwoBrightestChannels {
                 secondary: SecondaryColour::Yellow
@@ -300,7 +291,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "6...".parse::<SHT<u8>>().ok(),
+        "6".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::ThreeBrightestChannels,
             Ratio::new(1, 1),
@@ -309,7 +300,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "0...".parse::<SHT<u8>>().ok(),
+        "0".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::ThreeBrightestChannels,
             Ratio::new(0, 1),
@@ -318,7 +309,7 @@ fn parse_success() {
         .ok()
     );
     assert_eq!(
-        "W...".parse::<SHT<u8>>().ok(),
+        "W".parse::<SHT<u8>>().ok(),
         SHT::new(
             ChannelRatios::ThreeBrightestChannels,
             Ratio::new(1, 1),
@@ -339,7 +330,55 @@ fn parse_failure() {
             ErrorKind::Tag
         )))
     );
-    todo!()
+    assert_eq!(
+        "...".parse::<SHT<u8>>(),
+        Err(ParsePropertyError::ParseFailure(Error::new(
+            "...".to_owned(),
+            ErrorKind::Tag
+        )))
+    );
+    let leftover = |s: &str| Err(ParsePropertyError::InputRemaining(s.to_string()));
+    // extra W
+    assert_eq!("8r6g3W".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("rW".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("8rW".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("r3W".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("6r3W".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("r6gW".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("8r6gW".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("8r6g3W".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("8y3W".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("6W".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("0W".parse::<SHT<u8>>(), leftover("W"));
+    assert_eq!("WW".parse::<SHT<u8>>(), leftover("W"));
+    // extra r
+    assert_eq!("8r6g3r".parse::<SHT<u8>>(), leftover("r"));
+    assert_eq!("rr".parse::<SHT<u8>>(), leftover("r"));
+    assert_eq!("8rr".parse::<SHT<u8>>(), leftover("r"));
+    assert_eq!("r6gr".parse::<SHT<u8>>(), leftover("r"));
+    assert_eq!("8r6gr".parse::<SHT<u8>>(), leftover("r"));
+    assert_eq!("8r6g3r".parse::<SHT<u8>>(), leftover("r"));
+    assert_eq!("8y3r".parse::<SHT<u8>>(), leftover("r"));
+    assert_eq!("Wr".parse::<SHT<u8>>(), leftover("r"));
+    // extra c
+    assert_eq!("8r6g3c".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("rc".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("8rc".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("r3c".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("6r3c".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("r6gc".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("8r6gc".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("8r6g3c".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("8y3c".parse::<SHT<u8>>(), leftover("c"));
+    assert_eq!("Wc".parse::<SHT<u8>>(), leftover("c"));
+    // extra 0
+    assert_eq!("r0".parse::<SHT<u8>>(), leftover("0"));
+    assert_eq!("8r0".parse::<SHT<u8>>(), leftover("0"));
+    assert_eq!("r6g0".parse::<SHT<u8>>(), leftover("0"));
+    assert_eq!("8r6g0".parse::<SHT<u8>>(), leftover("0"));
+    assert_eq!("W0".parse::<SHT<u8>>(), leftover("0"));
+    // extra 1
+    assert_eq!("W1".parse::<SHT<u8>>(), leftover("1"));
 }
 
 #[test]
@@ -366,7 +405,7 @@ fn parse_digits() {
         let c = i as char;
         assert_eq!(
             duodecimal_digit(&c.to_string()).is_ok(),
-            digits.contains(&c)
+            digits.contains(&c.to_uppercase().next().unwrap())
         );
         assert_eq!(
             number_from_digit::<u8>(&c.to_string()).is_ok(),
@@ -683,19 +722,4 @@ fn parse_sht_data() {
             )
         ))
     );
-}
-
-#[test]
-fn sht_parse_success() {
-    todo!()
-}
-
-#[test]
-fn sht_parse_failure() {
-    todo!()
-}
-
-#[test]
-fn case_works() {
-    unimplemented!();
 }

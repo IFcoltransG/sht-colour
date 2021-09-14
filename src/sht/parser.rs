@@ -152,12 +152,13 @@ where
     u8: Into<T>,
 {
     match sht_data(input).finish() {
-        Ok((_, (shade, channel_ratios, tint))) => SHT::new(
+        Ok(("", (shade, channel_ratios, tint))) => SHT::new(
             channel_ratios,
             shade.unwrap_or(<_>::one()),
             tint.unwrap_or(<_>::zero()),
         )
         .map_err(ParsePropertyError::ValueErrors),
+        Ok((remaining, _)) => Err(ParsePropertyError::InputRemaining(remaining.to_string())),
         Err(y) => Err(y.into()),
     }
 }

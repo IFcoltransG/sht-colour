@@ -10,6 +10,7 @@ use std::str::FromStr;
 pub enum ParsePropertyError {
     ValueErrors(Vec<SHTValueError>),
     ParseFailure(Error<String>),
+    InputRemaining(String),
 }
 
 impl From<Error<&str>> for ParsePropertyError {
@@ -84,22 +85,17 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
         };
         match code.normal() {
             Ok(code) => Ok(code),
-            Err((errs, _)) => Err(errs),
+            Err(errs) => Err(errs),
         }
     }
 
-    fn is_valid(self: Self) -> bool {
-        self.normal().is_ok()
-    }
-
-    fn normal(self: Self) -> Result<Self, (Vec<SHTValueError>, Option<Self>)> {
+    fn normal(self: Self) -> Result<Self, Vec<SHTValueError>> {
         let Self {
-            mut channel_ratios,
-            mut shade,
-            mut tint,
+            channel_ratios,
+            shade,
+            tint,
         } = self;
         // validate fields:
-        let mut usable = true;
         let mut errors = Vec::with_capacity(16); // more than strictly needed
         match channel_ratios.clone() {
             ChannelRatios::OneBrightestChannel {
@@ -109,29 +105,23 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
                 // colour has one brightest channel
                 if shade.is_zero() {
                     errors.push(SHTValueError::PrimaryShadeZero);
-                    usable = false;
                 }
                 if tint.is_one() {
                     errors.push(SHTValueError::PrimaryTintOne);
-                    usable = false;
                 }
                 if let Some((direction, blend)) = direction_blend {
                     // colour has a second-brightest channel
                     if direction == primary {
                         errors.push(SHTValueError::DirectionEqualsPrimary);
-                        usable = false;
                     }
                     if blend.is_zero() {
                         errors.push(SHTValueError::BlendZero);
-                        usable = false;
                     }
                     if blend.is_one() {
                         errors.push(SHTValueError::BlendOne);
-                        usable = false;
                     }
                     if blend > Ratio::one() {
                         errors.push(SHTValueError::ValueOutOfBounds);
-                        usable = false;
                     }
                 }
             }
@@ -139,22 +129,18 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
                 //colour has two brightest channels
                 if shade.is_zero() {
                     errors.push(SHTValueError::SecondaryShadeZero);
-                    usable = false;
                 }
                 if tint.is_one() {
                     errors.push(SHTValueError::SecondaryTintOne);
-                    usable = false;
                 }
             }
             ChannelRatios::ThreeBrightestChannels => {}
         }
         if tint > Ratio::one() {
             errors.push(SHTValueError::ValueOutOfBounds);
-            tint = Ratio::one()
         }
         if shade > Ratio::one() {
             errors.push(SHTValueError::ValueOutOfBounds);
-            shade = Ratio::zero()
         }
         if errors.is_empty() {
             Ok(Self {
@@ -162,21 +148,12 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
                 tint,
                 shade,
             })
-        } else if usable {
-            Err((
-                errors,
-                Some(Self {
-                    channel_ratios,
-                    tint,
-                    shade,
-                }),
-            ))
         } else {
-            Err((errors, None))
+            Err(errors)
         }
     }
 }
-
+//tint out of bounds, shade out of bounds
 impl<T> FromStr for SHT<T>
 where
     T: Clone
@@ -199,4 +176,4 @@ where
 #[cfg(test)]
 mod tests;
 
-pub mod parser;
+mod parser;
