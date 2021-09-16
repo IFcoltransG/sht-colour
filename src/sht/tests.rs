@@ -106,7 +106,7 @@ fn value_failure() {
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Blue,
                 direction_blend: Some((
-                    ColourChannel::Blue, //error
+                    ColourChannel::Blue, // error
                     Ratio::new(1u32, 2)
                 ))
             },

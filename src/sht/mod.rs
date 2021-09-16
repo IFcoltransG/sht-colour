@@ -89,7 +89,16 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
         }
     }
 
-    fn normal(self: Self) -> Result<Self, Vec<SHTValueError>> {
+    pub fn components(self) -> (ChannelRatios<T>, Ratio<T>, Ratio<T>) {
+        let Self {
+            channel_ratios,
+            shade,
+            tint,
+        } = self;
+        (channel_ratios, shade, tint)
+    }
+
+    fn normal(self) -> Result<Self, Vec<SHTValueError>> {
         let Self {
             channel_ratios,
             shade,
@@ -126,7 +135,7 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
                 }
             }
             ChannelRatios::TwoBrightestChannels { .. } => {
-                //colour has two brightest channels
+                // colour has two brightest channels
                 if shade.is_zero() {
                     errors.push(SHTValueError::SecondaryShadeZero);
                 }
@@ -145,15 +154,15 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
         if errors.is_empty() {
             Ok(Self {
                 channel_ratios,
-                tint,
                 shade,
+                tint,
             })
         } else {
             Err(errors)
         }
     }
 }
-//tint out of bounds, shade out of bounds
+// tint out of bounds, shade out of bounds
 impl<T> FromStr for SHT<T>
 where
     T: Clone

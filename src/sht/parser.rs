@@ -67,7 +67,7 @@ where
 pub fn quantity<T>(input: &str) -> IResult<&str, Ratio<T>>
 where
     u8: Into<T>,
-    T: CheckedMul + CheckedAdd + Clone + Integer + Pow<T, Output = T>,
+    T: CheckedMul + CheckedAdd + Clone + Integer,
 {
     let base = 12.into();
     // calculate number from digits, and store input precision
@@ -88,7 +88,7 @@ where
 
 pub fn direction_blend<T>(input: &str) -> IResult<&str, (ColourChannel, Ratio<T>)>
 where
-    T: Clone + Integer + CheckedMul + CheckedAdd + Pow<T, Output = T>,
+    T: Clone + Integer + CheckedMul + CheckedAdd,
     u8: Into<T>,
 {
     let (input, (blend, direction)) = pair(quantity, primary_colour)(input)?;
@@ -97,7 +97,7 @@ where
 
 pub fn channel_ratios<T>(input: &str) -> IResult<&str, ChannelRatios<T>>
 where
-    T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned + Pow<T, Output = T>,
+    T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned,
     u8: Into<T>,
 {
     alt((
@@ -119,7 +119,7 @@ pub fn sht_data<T>(
     input: &str,
 ) -> IResult<&str, (Option<Ratio<T>>, ChannelRatios<T>, Option<Ratio<T>>)>
 where
-    T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned + Pow<T, Output = T>,
+    T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned,
     u8: Into<T>,
 {
     let zero_shade = map(verify(quantity, |v| v.is_zero()), Some);
@@ -148,7 +148,7 @@ where
 
 pub fn parse_sht<T>(input: &str) -> Result<SHT<T>, ParsePropertyError>
 where
-    T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned + Pow<T, Output = T>,
+    T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned,
     u8: Into<T>,
 {
     match sht_data(input).finish() {
