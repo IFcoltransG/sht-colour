@@ -8,9 +8,7 @@ use nom::{
     sequence::{pair, tuple},
     Finish, IResult,
 };
-use num::{
-    pow::Pow, rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero,
-};
+use num::{rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero};
 
 pub fn duodecimal_digit(input: &str) -> IResult<&str, &str> {
     // ensure only one digit is taken
