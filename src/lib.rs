@@ -19,12 +19,44 @@ where
     res
 }
 
-pub fn sht_to_rgb<N, T>(_input: sht::SHT<N>, precision: usize) -> rgb::RGB<T>
+pub fn sht_to_rgb<T>(input: sht::SHT<T>, precision: usize) -> rgb::RGB<T>
 where
-    N: Clone + Integer + Unsigned,
-    T: Integer + Unsigned + From<N> + From<u8> + Clone + CheckedMul,
+    T: Integer + Unsigned + From<u8> + Clone + CheckedMul,
 {
-    todo!()
+    let round = |ratio: Ratio<T>| round_denominator::<T>(ratio, 16.into(), precision);
+    let (channel_ratios, shade, tint) = input.components();
+    let (max, min) = (
+        tint.clone() + shade * (<Ratio<_>>::one() - tint.clone()),
+        tint,
+    );
+    let (red, green, blue) = match channel_ratios {
+        sht::ChannelRatios::ThreeBrightestChannels => (min.clone(), min.clone(), min),
+        sht::ChannelRatios::TwoBrightestChannels { secondary } => match secondary {
+            sht::SecondaryColour::Cyan => (min, max.clone(), max),
+            sht::SecondaryColour::Yellow => (max.clone(), max.clone(), min),
+            sht::SecondaryColour::Magenta => (max.clone(), min.clone(), max),
+        },
+        sht::ChannelRatios::OneBrightestChannel {
+            primary,
+            direction_blend,
+        } => {
+            let (mut red, mut green, mut blue) = (min.clone(), min.clone(), min.clone());
+            match primary {
+                sht::ColourChannel::Red => red = max.clone(),
+                sht::ColourChannel::Green => green = max.clone(),
+                sht::ColourChannel::Blue => blue = max.clone(),
+            };
+            if let Some(direction_blend) = direction_blend {
+                match direction_blend {
+                    (sht::ColourChannel::Red, blend) => red = min.clone() + blend * (max - min),
+                    (sht::ColourChannel::Green, blend) => green = min.clone() + blend * (max - min),
+                    (sht::ColourChannel::Blue, blend) => blue = min.clone() + blend * (max - min),
+                }
+            };
+            (red, green, blue)
+        }
+    };
+    rgb::RGB::new(round(red), round(green), round(blue))
 }
 
 fn char_to_primary(c: char) -> sht::ColourChannel {
@@ -38,9 +70,9 @@ fn char_to_primary(c: char) -> sht::ColourChannel {
 
 fn char_to_secondary(a: char, b: char) -> sht::SecondaryColour {
     match (a, b) {
+        ('g', 'b') | ('b', 'g') => sht::SecondaryColour::Cyan,
         ('r', 'g') | ('g', 'r') => sht::SecondaryColour::Yellow,
         ('r', 'b') | ('b', 'r') => sht::SecondaryColour::Magenta,
-        ('g', 'b') | ('b', 'g') => sht::SecondaryColour::Cyan,
         _ => panic!("Unexpected colour channel combination! {} {}", a, b),
     }
 }
