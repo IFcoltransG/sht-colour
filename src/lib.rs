@@ -22,8 +22,7 @@ where
         new_denominator = new_denominator * base.clone();
     }
     new_denominator = new_denominator - negative_offset;
-    let res = ((ratio_on_unit_interval * new_denominator.clone() + half).trunc()) / new_denominator;
-    res
+    ((ratio_on_unit_interval * new_denominator.clone() + half).trunc()) / new_denominator
 }
 
 pub fn sht_to_rgb<T>(input: sht::SHT<T>, precision: usize) -> rgb::RGB<T>
@@ -100,16 +99,16 @@ where
     let tint = round(min.clone());
     let shade = if max.is_zero() {
         <num::rational::Ratio<_>>::zero()
-    } else if min.clone() != max.clone() {
+    } else if min != max {
         round((max.clone() - min.clone()) / (<num::rational::Ratio<_>>::one() - min.clone()))
     } else {
         <_>::one()
     };
     let channel_ratios;
-    if max.clone() > mid {
+    if max > mid {
         let primary = char_to_primary(max_channel);
 
-        let direction_blend = if mid > min.clone() {
+        let direction_blend = if mid > min{
             let direction = char_to_primary(mid_channel);
             let blend = (mid - min.clone()) / (max - min);
             Some((direction, round(blend)))

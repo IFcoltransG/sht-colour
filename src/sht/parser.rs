@@ -100,22 +100,21 @@ where
 {
     alt((
         map(
-            pair(|input| primary_colour(input), opt(direction_blend)),
+            pair(primary_colour, opt(direction_blend)),
             |(primary, direction_blend)| ChannelRatios::OneBrightestChannel {
                 primary,
                 direction_blend,
             },
         ),
-        map(
-            |input| secondary_colour(input),
-            |secondary| ChannelRatios::TwoBrightestChannels { secondary },
-        ),
+        map(secondary_colour, |secondary| {
+            ChannelRatios::TwoBrightestChannels { secondary }
+        }),
     ))(input)
 }
 
-pub fn sht_data<T>(
-    input: &str,
-) -> IResult<&str, (Option<Ratio<T>>, ChannelRatios<T>, Option<Ratio<T>>)>
+type SHTParts<T> = (Option<Ratio<T>>, ChannelRatios<T>, Option<Ratio<T>>);
+
+pub fn sht_data<T>(input: &str) -> IResult<&str, SHTParts<T>>
 where
     T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned,
     u8: Into<T>,
@@ -152,8 +151,8 @@ where
     match sht_data(input).finish() {
         Ok(("", (shade, channel_ratios, tint))) => SHT::new(
             channel_ratios,
-            shade.unwrap_or(<_>::one()),
-            tint.unwrap_or(<_>::zero()),
+            shade.unwrap_or_else(<_>::one),
+            tint.unwrap_or_else(<_>::zero),
         )
         .map_err(ParsePropertyError::ValueErrors),
         Ok((remaining, _)) => Err(ParsePropertyError::InputRemaining(remaining.to_string())),

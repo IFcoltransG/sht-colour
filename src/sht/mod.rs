@@ -15,11 +15,8 @@ pub enum ParsePropertyError {
 
 impl From<Error<&str>> for ParsePropertyError {
     fn from(value: Error<&str>) -> Self {
-        match value {
-            Error { input, code } => {
-                ParsePropertyError::ParseFailure(Error::new(input.to_owned(), code))
-            }
-        }
+        let Error { input, code } = value;
+        ParsePropertyError::ParseFailure(Error::new(input.to_owned(), code))
     }
 }
 
