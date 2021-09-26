@@ -88,13 +88,13 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
         }
     }
 
-    pub fn components(self) -> (ChannelRatios<T>, Ratio<T>, Ratio<T>) {
+    pub fn components(&self) -> (ChannelRatios<T>, Ratio<T>, Ratio<T>) {
         let Self {
             channel_ratios,
             shade,
             tint,
         } = self;
-        (channel_ratios, shade, tint)
+        (channel_ratios.clone(), shade.clone(), tint.clone())
     }
 
     fn normal(self) -> Result<Self, Vec<SHTValueError>> {
@@ -204,9 +204,7 @@ fn duodecimal<T>(mut input: Ratio<T>, precision: usize) -> String
 where
     T: TryInto<usize> + Integer + Zero + Rem<T, Output = T> + Div<T, Output = T> + Clone,
     u8: Into<T>,
-    T: std::fmt::Debug,
 {
-    eprintln!("Displaying: {:?} at {}", input, precision);
     let half = || Ratio::new(1.into(), 2.into());
     let digit_characters = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'X', 'E'];
     let mut digits = Vec::with_capacity(precision);
@@ -217,11 +215,9 @@ where
     for digits_left in (0..precision).rev() {
         let scaled = input * Ratio::from_integer(12.into());
         input = scaled.fract();
-        eprintln!("Iteration {:?} with {:#?}", digits_left, input);
         if digits_left.is_zero() {
             // round because no more digits
             // comparing remainder to 0.5
-            eprintln!("Setting rounding");
             round_up = input >= half();
         }
         let integer_part = scaled.to_integer();
@@ -245,7 +241,6 @@ impl<T> Display for SHT<T>
 where
     T: TryInto<usize> + Unsigned + Integer + Clone + Display + One,
     u8: Into<T>,
-    T: std::fmt::Debug,
 {
     fn fmt(&self, formatter: &mut Formatter) -> FMTResult {
         let precision = formatter.precision().unwrap_or(2);

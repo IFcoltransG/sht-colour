@@ -17,7 +17,7 @@ fn rgb_to_sht() {
     .iter()
     {
         assert_eq!(
-            rgb_to_sht(input.parse::<RGB<u32>>().unwrap(), 1),
+            rgb_to_sht(&input.parse::<RGB<u32>>().unwrap(), 1),
             output.parse::<SHT<u32>>().unwrap()
         );
     }
@@ -48,7 +48,7 @@ fn sht_to_rgb() {
     .iter()
     {
         assert_eq!(
-            sht_to_rgb(input.parse::<SHT<u32>>().unwrap(), 2),
+            sht_to_rgb(&input.parse::<SHT<u32>>().unwrap(), 2),
             output.parse::<RGB<u32>>().unwrap()
         )
     }

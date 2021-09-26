@@ -32,7 +32,7 @@ where
     ((ratio_on_unit_interval * new_denominator.clone() + half).trunc()) / new_denominator
 }
 
-pub fn sht_to_rgb<T>(input: sht::SHT<T>, precision: usize) -> rgb::RGB<T>
+pub fn sht_to_rgb<T>(input: &sht::SHT<T>, precision: usize) -> rgb::RGB<T>
 where
     T: Integer + Unsigned + From<u8> + Clone + CheckedMul,
     T: Debug,
@@ -94,7 +94,7 @@ fn char_to_secondary(a: char, b: char) -> sht::SecondaryColour {
     }
 }
 
-pub fn rgb_to_sht<T>(input: rgb::RGB<T>, precision: usize) -> sht::SHT<T>
+pub fn rgb_to_sht<T>(input: &rgb::RGB<T>, precision: usize) -> sht::SHT<T>
 where
     T: Integer + Unsigned + Clone + From<u8> + CheckedMul,
 {

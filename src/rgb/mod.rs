@@ -32,9 +32,9 @@ where
         RGB { red, green, blue }
     }
 
-    pub fn components(self) -> (Ratio<T>, Ratio<T>, Ratio<T>) {
+    pub fn components(&self) -> (Ratio<T>, Ratio<T>, Ratio<T>) {
         let Self { red, green, blue } = self;
-        (red, green, blue)
+        (red.clone(), green.clone(), blue.clone())
     }
 }
 
