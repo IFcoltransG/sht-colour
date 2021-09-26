@@ -56,6 +56,7 @@ where
 {
     let mut number = Ratio::from_integer(digit);
     let new_index = index.checked_add(1)?;
+
     for _ in 0..new_index {
         number = number.checked_div(&Ratio::from_integer(base.clone()))?
     }
@@ -68,20 +69,32 @@ where
     T: CheckedMul + CheckedAdd + Clone + Integer,
 {
     let base = 12.into();
+    let half_base = || (12 / 2).into(); // for rounding
+
     // calculate number from digits, and store input precision
     let mut digit_folder = fold_many1(
         number_from_digit,
-        || (0u8, Ratio::from_integer(0.into())),
-        |(length, number), digit| {
-            try_shift_fraction(&base, digit, length)
+        || (0u8, Ratio::from_integer(0.into()), None),
+        |(length, number, round_up), digit| {
+            try_shift_fraction(&base, digit.clone(), length)
                 .and_then(|(length, shifted_digit)| {
-                    Some((length, number.checked_add(&shifted_digit)?))
+                    Some((length, number.checked_add(&shifted_digit)?, None))
                 })
-                .unwrap_or((length, number))
+                // if unwrapping, it means denominator exceeded maximum size for type
+                // so check if we need to round up (unless already calculated)
+                .unwrap_or_else(|| (length, number, round_up.or_else(|| Some(digit >= half_base()))))
         },
     );
-    let (input, (_, number)) = digit_folder(input)?;
-    Ok((input, number))
+    let (input, (length, number, round_up)) = digit_folder(input)?;
+    match round_up {
+        Some(true) => {
+            let correction = try_shift_fraction(&base, 1.into(), length - 1)
+                .map(|(_, n)| n)
+                .unwrap_or_else(<_>::zero);
+            Ok((input, number + correction))
+        }
+        _ => Ok((input, number)),
+    }
 }
 
 pub fn direction_blend<T>(input: &str) -> IResult<&str, (ColourChannel, Ratio<T>)>

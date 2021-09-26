@@ -39,3 +39,24 @@ fn parse_failure() {
     );
     assert_eq!("#".parse::<RGB<u8>>(), Err(ParseHexError::DigitParseError));
 }
+
+#[test]
+fn display() {
+    use super::RGB;
+    assert_eq!(
+        &format!("{:4}", "#000".parse::<RGB<u32>>().unwrap()),
+        "#000000000000"
+    );
+    assert_eq!(
+        &format!("{}", "#ABC".parse::<RGB<u16>>().unwrap()),
+        "#AABBCC"
+    );
+    assert_eq!(
+        &format!("{:1}", "#AABBCC".parse::<RGB<u32>>().unwrap()),
+        "#ABC"
+    );
+    assert_eq!(
+        &format!("{:4}", "#123456".parse::<RGB<u32>>().unwrap()),
+        "#121234345656"
+    );
+}

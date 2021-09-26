@@ -322,7 +322,7 @@ fn parse_success() {
 #[test]
 fn parse_failure() {
     use super::{ParsePropertyError, SHT};
-    use nom::{error::Error, error::ErrorKind};
+    use nom::error::{Error, ErrorKind};
     assert_eq!(
         "".parse::<SHT<u8>>(),
         Err(ParsePropertyError::ParseFailure(Error::new(
@@ -426,19 +426,30 @@ fn parse_digits() {
 fn parse_quantity_success() {
     use super::parser::quantity;
     use num::rational::Ratio;
-    assert_eq!(quantity("1C"), Ok(("C", Ratio::new(1u32, 12))));
-    assert_eq!(quantity("11C"), Ok(("C", Ratio::new(13u32, 144))));
-    assert_eq!(quantity("EEEC"), Ok(("C", Ratio::new(1727u32, 1728))));
-    assert_eq!(quantity("EEC"), Ok(("C", Ratio::new(143u32, 144))));
+    assert_eq!(quantity("1c"), Ok(("c", Ratio::new(1u32, 12))));
+    assert_eq!(quantity("11c"), Ok(("c", Ratio::new(13u32, 144))));
+    assert_eq!(quantity("EEEc"), Ok(("c", Ratio::new(1727u32, 1728))));
+    assert_eq!(quantity("EEc"), Ok(("c", Ratio::new(143u32, 144))));
     // 144 is the largest power of 12 that fits in a u8
-    assert_eq!(quantity("EEEEEEC"), Ok(("C", Ratio::new(143u8, 144))));
+    assert_eq!(quantity("EE0Ec"), Ok(("c", Ratio::new(143u8, 144))));
+    // round up
+    assert_eq!(quantity("EEEEc"), Ok(("c", Ratio::new(1u8, 1))));
     // 20736 is the largest power of 12 that fits in a u16
-    assert_eq!(quantity("EEEEEEC"), Ok(("C", Ratio::new(20735u16, 20736))));
+    assert_eq!(quantity("EEEE0Ec"), Ok(("c", Ratio::new(20735u16, 20736))));
+    assert_eq!(quantity("555555c"), Ok(("c", Ratio::new(9425u16, 20736))));
+    // however, can get another sixth or quarter of precision:
+    assert_eq!(quantity("555565c"), Ok(("c", Ratio::new(18851u16, 41472))));
+    // quarter:
+    assert_eq!(quantity("555585c"), Ok(("c", Ratio::new(28277u16, 62208))));
+    assert_eq!(quantity("EEEE7c"), Ok(("c", Ratio::new(1u16, 1))));
+    assert_eq!(quantity("EEEE5c"), Ok(("c", Ratio::new(20735u16, 20736))));
     // u32 supports all 6 digits of precision
     assert_eq!(
-        quantity("EEEEEEC"),
-        Ok(("C", Ratio::new(2985983u32, 2985984)))
+        quantity("EEEEEEc"),
+        Ok(("c", Ratio::new(2985983u32, 2985984)))
     );
+    // round up to 67/100 in base 12
+    assert_eq!(quantity("666c"), Ok(("c", Ratio::new(79u8, 144))))
 }
 
 #[test]
@@ -722,4 +733,66 @@ fn parse_sht_data() {
             )
         ))
     );
+}
+
+#[test]
+fn display() {
+    use super::SHT;
+    assert_eq!(&format!("{:.4}", "0".parse::<SHT<u8>>().unwrap()), "0");
+    assert_eq!(&format!("{:.4}", "6".parse::<SHT<u8>>().unwrap()), "6");
+    assert_eq!(&format!("{:.4}", "6666".parse::<SHT<u8>>().unwrap()), "67");
+    assert_eq!(
+        &format!("{:.4}", "6666".parse::<SHT<u32>>().unwrap()),
+        "6666"
+    );
+    assert_eq!(
+        &format!("{:.5}", "123456".parse::<SHT<u32>>().unwrap()),
+        "12346"
+    );
+    assert_eq!(&format!("{:.1}", "r".parse::<SHT<u8>>().unwrap()), "r");
+    assert_eq!(&format!("{:.1}", "8r".parse::<SHT<u8>>().unwrap()), "8r");
+    assert_eq!(&format!("{:.1}", "r3".parse::<SHT<u8>>().unwrap()), "r3");
+    assert_eq!(&format!("{:.1}", "8r3".parse::<SHT<u8>>().unwrap()), "8r3");
+    assert_eq!(&format!("{:.1}", "r6g".parse::<SHT<u8>>().unwrap()), "r6g");
+    assert_eq!(
+        &format!("{:.1}", "8r6g".parse::<SHT<u8>>().unwrap()),
+        "8r6g"
+    );
+    assert_eq!(
+        &format!("{:.1}", "8r6g3".parse::<SHT<u8>>().unwrap()),
+        "8r6g3"
+    );
+    assert_eq!(&format!("{:.1}", "8y3".parse::<SHT<u8>>().unwrap()), "8y3");
+    assert_eq!(&format!("{:.1}", "6".parse::<SHT<u8>>().unwrap()), "6");
+    assert_eq!(&format!("{:.1}", "0".parse::<SHT<u8>>().unwrap()), "0");
+    assert_eq!(&format!("{:.1}", "W".parse::<SHT<u8>>().unwrap()), "W");
+    assert_eq!(&format!("{}", "1234".parse::<SHT<u8>>().unwrap()), "12");
+    assert_eq!(&format!("{:.2}", "EEE".parse::<SHT<u16>>().unwrap()), "W");
+    assert_eq!(&format!("{}", "EEE".parse::<SHT<u8>>().unwrap()), "W");
+}
+
+#[test]
+fn duodecimal_test() {
+    use super::duodecimal;
+    use num::rational::Ratio;
+    assert_eq!(duodecimal(Ratio::new(0, 1), 4), "0");
+    assert_eq!(duodecimal(Ratio::new(6, 12), 4), "6");
+    assert_eq!(duodecimal(Ratio::new(11310, 20736), 2), "67"); // 6666 / 10000 in base 12
+    assert_eq!(duodecimal(Ratio::new(11310, 20736), 4), "6666"); // same, different prec
+    assert_eq!(duodecimal(Ratio::new(296130, 2985984), 5), "12346"); // 123456 /
+                                                                     // 1000000 in
+                                                                     // base 12
+}
+
+#[test]
+fn round_tests() {
+    use super::round;
+    assert_eq!(round(&[1, 0, 0, 0], true), [1, 0, 0, 1]);
+    assert_eq!(round(&[1, 0, 0, 0], false), [1, 0, 0, 0]);
+    assert_eq!(round(&[1, 11, 11, 11, 11], false), [1, 11, 11, 11, 11]);
+    assert_eq!(round(&[1, 11, 11, 11, 11], true), [2]);
+    assert_eq!(round(&[11, 11, 11, 11], true), [12]);
+    assert_eq!(round(&[12], false), [12]);
+    assert_eq!(round(&[12], true), [12]);
+    assert_eq!(round(&[13], true), [12]);
 }

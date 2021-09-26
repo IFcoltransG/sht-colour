@@ -1,9 +1,47 @@
 use nom::error::Error;
 use num::{
-    pow::Pow, rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero,
+    checked_pow, rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero,
 };
 use parser::parse_sht;
-use std::str::FromStr;
+use std::{
+    convert::TryInto,
+    fmt::{Display, Formatter, Result as FMTResult},
+    ops::{Div, Rem},
+    str::FromStr,
+};
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct SHT<T: Clone + Integer + Unsigned> {
+    channel_ratios: ChannelRatios<T>,
+    shade: Ratio<T>, // None=1
+    tint: Ratio<T>,  // None=0
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum ChannelRatios<T: Clone + Integer + Unsigned> {
+    OneBrightestChannel {
+        primary: ColourChannel,
+        direction_blend: Option<(ColourChannel, Ratio<T>)>,
+    },
+    TwoBrightestChannels {
+        secondary: SecondaryColour,
+    },
+    ThreeBrightestChannels,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum ColourChannel {
+    Red,
+    Green,
+    Blue,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum SecondaryColour {
+    Cyan,
+    Yellow,
+    Magenta,
+}
 
 #[derive(Debug, PartialEq)]
 #[non_exhaustive]
@@ -31,42 +69,6 @@ pub enum SHTValueError {
     ValueOutOfBounds,       // a ratio is not in 0..1 range
     BlendZero,              // blend set to 0
     BlendOne,               // blend set to 1
-}
-// primary set yet shade 0 or tint 1
-// direction equal to primary
-// blend 0 or 1
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum ColourChannel {
-    Red,
-    Green,
-    Blue,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum SecondaryColour {
-    Cyan,
-    Yellow,
-    Magenta,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum ChannelRatios<T: Clone + Integer + Unsigned> {
-    OneBrightestChannel {
-        primary: ColourChannel,
-        direction_blend: Option<(ColourChannel, Ratio<T>)>,
-    },
-    TwoBrightestChannels {
-        secondary: SecondaryColour,
-    },
-    ThreeBrightestChannels,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct SHT<T: Clone + Integer + Unsigned> {
-    channel_ratios: ChannelRatios<T>,
-    shade: Ratio<T>, // None=1
-    tint: Ratio<T>,  // None=0
 }
 
 impl<T: Clone + Integer + Unsigned> SHT<T> {
@@ -159,23 +161,136 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
         }
     }
 }
-// tint out of bounds, shade out of bounds
+
 impl<T> FromStr for SHT<T>
 where
-    T: Clone
-        + Integer
-        + Unsigned
-        + FromStr
-        + From<u8>
-        + CheckedMul
-        + CheckedAdd
-        + CheckedDiv
-        + Pow<T, Output = T>,
+    T: Clone + Integer + Unsigned + FromStr + CheckedMul + CheckedAdd + CheckedDiv,
+    u8: Into<T>,
 {
     type Err = ParsePropertyError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         parse_sht(s)
+    }
+}
+
+/// Possibly rounds a base 12 number
+/// If round_up, adds 1 to the number
+/// Othewise, leaves number unchanged
+/// Number is a slice of u8 digits
+fn round(input: &[u8], round_up: bool) -> Vec<u8> {
+    eprintln!("Rounding: {}", round_up);
+    if round_up {
+        if let Some((&last, rest)) = input.split_last() {
+            let rounded_last = last + 1;
+            if rounded_last >= 12 {
+                round(rest, round_up)
+            } else {
+                let mut mut_rest = rest.to_vec();
+                mut_rest.push(rounded_last);
+                mut_rest
+            }
+        } else {
+            vec![12]
+        }
+    } else {
+        input.to_vec()
+    }
+}
+
+
+/// Converts a ratio to a fixed point base 12 string
+fn duodecimal<T>(mut input: Ratio<T>, precision: usize) -> String
+where
+    T: TryInto<usize> + Integer + Zero + Rem<T, Output = T> + Div<T, Output = T> + Clone,
+    u8: Into<T>,
+    T: std::fmt::Debug,
+{
+    eprintln!("Displaying: {:?} at {}", input, precision);
+    let half = || Ratio::new(1.into(), 2.into());
+    let digit_characters = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'X', 'E'];
+    let mut digits = Vec::with_capacity(precision);
+    if input >= <_>::one() {
+        return "W".to_string();
+    }
+    let mut round_up = false;
+    for digits_left in (0..precision).rev() {
+        let scaled = input * Ratio::from_integer(12.into());
+        input = scaled.fract();
+        eprintln!("Iteration {:?} with {:#?}", digits_left, input);
+        if digits_left.is_zero() {
+            // round because no more digits
+            // comparing remainder to 0.5
+            eprintln!("Setting rounding");
+            round_up = input >= half();
+        }
+        let integer_part = scaled.to_integer();
+        let next_digit = match integer_part.try_into() {
+            Ok(n) if n < 12 => n as u8,
+            _ => 12u8,
+        };
+        digits.push(next_digit);
+        if input.is_zero() {
+            break;
+        }
+    }
+    // possibly round up, then convert &[u8] to digit String
+    round(&digits, round_up)
+        .iter()
+        .map(|&c| digit_characters.get(c as usize).unwrap_or(&'W'))
+        .collect()
+}
+
+impl<T> Display for SHT<T>
+where
+    T: TryInto<usize> + Unsigned + Integer + Clone + Display + One,
+    u8: Into<T>,
+    T: std::fmt::Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> FMTResult {
+        let precision = formatter.precision().unwrap_or(2);
+
+        let ratio_to_str = |ratio: Ratio<T>| duodecimal(ratio, precision);
+        let primary_to_str = |primary| match primary {
+            ColourChannel::Red => "r".to_string(),
+            ColourChannel::Green => "g".to_string(),
+            ColourChannel::Blue => "b".to_string(),
+        };
+        let secondary_to_str = |secondary| match secondary {
+            SecondaryColour::Cyan => "c".to_string(),
+            SecondaryColour::Yellow => "y".to_string(),
+            SecondaryColour::Magenta => "m".to_string(),
+        };
+
+        let (channel_ratios, shade_ratio, tint_ratio) = self.clone().components();
+        let tint = (!tint_ratio.is_zero()).then(|| tint_ratio);
+        let shade = (!shade_ratio.is_one()).then(|| shade_ratio);
+        let (primary, secondary, direction, blend) = match channel_ratios {
+            ChannelRatios::OneBrightestChannel {
+                primary,
+                direction_blend,
+            } => {
+                if let Some((direction, blend)) = direction_blend {
+                    (Some(primary), None, Some(direction), Some(blend))
+                } else {
+                    (Some(primary), None, None, None)
+                }
+            }
+            ChannelRatios::TwoBrightestChannels { secondary } => {
+                (None, Some(secondary), None, None)
+            }
+            ChannelRatios::ThreeBrightestChannels => (None, None, None, None),
+        };
+        write!(
+            formatter,
+            "{}{}{}{}{}{}",
+            shade.map(ratio_to_str).unwrap_or_else(String::new),
+            primary.map(primary_to_str).unwrap_or_else(String::new),
+            blend.map(ratio_to_str).unwrap_or_else(String::new),
+            direction.map(primary_to_str).unwrap_or_else(String::new),
+            secondary.map(secondary_to_str).unwrap_or_else(String::new),
+            tint.map(ratio_to_str).unwrap_or_else(String::new)
+        )
     }
 }
 
