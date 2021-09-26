@@ -3,7 +3,7 @@
 //! See https://omaitzen.com/sht/spec/ for the specification.
 //! Supports conversion to and from RGB/hex and parsing from text.
 
-use num::{rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
+use num::{rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero, checked_pow};
 use std::fmt::Debug;
 
 /// Support for RGB colour codes
@@ -21,14 +21,10 @@ fn round_denominator<T>(
     negative_offset: T,
 ) -> Ratio<T>
 where
-    T: Integer + Unsigned + Clone + From<u8>,
+    T: Integer + Unsigned + CheckedMul + Clone + From<u8>,
 {
     let half = Ratio::new(1.into(), 2.into());
-    let mut new_denominator = T::one();
-    for _ in 0..exponent {
-        new_denominator = new_denominator * base.clone();
-    }
-    new_denominator = new_denominator - negative_offset;
+    let new_denominator = checked_pow(base, exponent).expect("Overflow calculating denominator") - negative_offset;
     ((ratio_on_unit_interval * new_denominator.clone() + half).trunc()) / new_denominator
 }
 

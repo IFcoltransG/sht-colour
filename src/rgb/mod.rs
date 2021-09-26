@@ -103,17 +103,11 @@ fn channel_split(s: &str) -> (&str, &str, &str) {
 fn parse_channel<T>(digits: &str) -> Result<Ratio<T>, ParseHexError>
 where
     T: Unsigned + Integer + FromStr + Clone + CheckedMul,
-    u8: Into<T>
+    u8: Into<T>,
 {
     Ok(<Ratio<T>>::new(
         T::from_str_radix(digits, 16).map_err(|_| ParseHexError::DigitParseError)?,
-        {
-            let mut base = T::one();
-            for _ in 0..(digits.len() * 4) {
-                base = base.checked_mul(&2.into()).ok_or(ParseHexError::Overflow)?;
-            }
-            base
-        } - T::one(),
+        checked_pow(2.into(), digits.len() * 4).ok_or(ParseHexError::Overflow)? - T::one(),
     ))
 }
 
