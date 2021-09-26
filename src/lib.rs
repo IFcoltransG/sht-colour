@@ -4,7 +4,6 @@
 //! Supports conversion to and from RGB/hex and parsing from text.
 
 use num::{checked_pow, rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
-use std::fmt::Debug;
 
 /// Support for RGB colour codes
 pub mod rgb;
@@ -32,7 +31,6 @@ where
 pub fn sht_to_rgb<T>(input: &sht::SHT<T>, precision: usize) -> rgb::RGB<T>
 where
     T: Integer + Unsigned + From<u8> + Clone + CheckedMul,
-    T: Debug,
 {
     let round = |ratio: Ratio<T>| round_denominator::<T>(ratio, 16.into(), precision, <_>::one());
     let (channel_ratios, shade, tint) = input.components();
