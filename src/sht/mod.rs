@@ -1,6 +1,6 @@
 use nom::error::Error;
 use num::{
-    checked_pow, rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero,
+    rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero,
 };
 use parser::parse_sht;
 use std::{
