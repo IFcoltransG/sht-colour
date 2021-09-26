@@ -59,14 +59,22 @@ impl From<Error<&str>> for ParsePropertyError {
 #[derive(Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum SHTValueError {
-    PrimaryShadeZero,       // primary set with shade set to 0
-    PrimaryTintOne,         // primary set with tint set to 0
-    SecondaryShadeZero,     // secondary set with shade set to 0
-    SecondaryTintOne,       // secondary set with shad set to 0
-    DirectionEqualsPrimary, // direction equal to primary
-    ValueOutOfBounds,       // a ratio is not in 0..1 range
-    BlendZero,              // blend set to 0
-    BlendOne,               // blend set to 1
+    /// Error constructing an [`SHT`] because `primary` set, while `shade` set to 0
+    PrimaryShadeZero,
+    /// Error constructing an [`SHT`] because `primary` set, while `tint` set to 0
+    PrimaryTintOne,
+    /// Error constructing an [`SHT`] because `secondary` set, while `shade` set to 0
+    SecondaryShadeZero,
+    /// Error constructing an [`SHT`] because `secondary` set, while `shade` set to 0
+    SecondaryTintOne,
+    /// Error constructing an [`SHT`] because `direction` is equal to `primary`
+    DirectionEqualsPrimary,
+    /// Error constructing an [`SHT`] because a ratio is not in `0..1` range (inclusive)
+    ValueOutOfBounds,
+    /// Error constructing an [`SHT`] because `blend` set to 0
+    BlendZero,
+    /// Error constructing an [`SHT`] because `blend` set to 1
+    BlendOne,
 }
 
 impl<T: Clone + Integer + Unsigned> SHT<T> {
