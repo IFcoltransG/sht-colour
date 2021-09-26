@@ -399,7 +399,7 @@ fn parse_colours() {
 fn parse_digits() {
     use super::parser::{duodecimal_digit, number_from_digit};
     let digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'X', 'E'];
-    for i in 1u8..=255 {
+    for i in 0u8..=255 {
         // iterate through ASCII
         // ensure the matches exactly correspond to digits
         let c = i as char;
