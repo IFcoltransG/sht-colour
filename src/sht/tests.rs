@@ -2,7 +2,7 @@
 fn value_success() {
     use super::{ChannelRatios, ColourChannel, SecondaryColour, SHT};
     use num::rational::Ratio;
-    for (channel_ratios, tint, shade) in [
+    for (channel_ratios, tint, shade) in &[
         (
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Blue,
@@ -42,7 +42,6 @@ fn value_success() {
             Ratio::new(0, 1),
         ),
     ]
-    .iter()
     {
         assert_eq!(
             SHT::<u32>::new(*channel_ratios, *shade, *tint),
@@ -107,7 +106,7 @@ fn value_failure() {
                 primary: ColourChannel::Blue,
                 direction_blend: Some((
                     ColourChannel::Blue, // error
-                    Ratio::new(1u32, 2)
+                    Ratio::new(1_u32, 2)
                 ))
             },
             Ratio::new(1, 2),
@@ -115,7 +114,7 @@ fn value_failure() {
         ),
         Err(vec![SHTValueError::DirectionEqualsPrimary])
     );
-    for sht_code in [
+    for sht_code in &[
         SHT::<u32>::new(
             ChannelRatios::OneBrightestChannel {
                 primary: ColourChannel::Blue,
@@ -151,7 +150,6 @@ fn value_failure() {
             Ratio::new(1, 2),
         ),
     ]
-    .iter()
     {
         assert_eq!(sht_code, &Err(vec![SHTValueError::ValueOutOfBounds]));
     }
@@ -399,7 +397,7 @@ fn parse_colours() {
 fn parse_digits() {
     use super::parser::{duodecimal_digit, number_from_digit};
     let digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'X', 'E'];
-    for i in 0u8..=255 {
+    for i in 0_u8..=255 {
         // iterate through ASCII
         // ensure the matches exactly correspond to digits
         let c = i as char;
@@ -426,30 +424,30 @@ fn parse_digits() {
 fn parse_quantity_success() {
     use super::parser::quantity;
     use num::rational::Ratio;
-    assert_eq!(quantity("1c"), Ok(("c", Ratio::new(1u32, 12))));
-    assert_eq!(quantity("11c"), Ok(("c", Ratio::new(13u32, 144))));
-    assert_eq!(quantity("EEEc"), Ok(("c", Ratio::new(1727u32, 1728))));
-    assert_eq!(quantity("EEc"), Ok(("c", Ratio::new(143u32, 144))));
+    assert_eq!(quantity("1c"), Ok(("c", Ratio::new(1_u32, 12))));
+    assert_eq!(quantity("11c"), Ok(("c", Ratio::new(13_u32, 144))));
+    assert_eq!(quantity("EEEc"), Ok(("c", Ratio::new(1727_u32, 1728))));
+    assert_eq!(quantity("EEc"), Ok(("c", Ratio::new(143_u32, 144))));
     // 144 is the largest power of 12 that fits in a u8
-    assert_eq!(quantity("EE0Ec"), Ok(("c", Ratio::new(143u8, 144))));
+    assert_eq!(quantity("EE0Ec"), Ok(("c", Ratio::new(143_u8, 144))));
     // round up
-    assert_eq!(quantity("EEEEc"), Ok(("c", Ratio::new(1u8, 1))));
+    assert_eq!(quantity("EEEEc"), Ok(("c", Ratio::new(1_u8, 1))));
     // 20736 is the largest power of 12 that fits in a u16
-    assert_eq!(quantity("EEEE0Ec"), Ok(("c", Ratio::new(20735u16, 20736))));
-    assert_eq!(quantity("555555c"), Ok(("c", Ratio::new(9425u16, 20736))));
+    assert_eq!(quantity("EEEE0Ec"), Ok(("c", Ratio::new(20735_u16, 20736))));
+    assert_eq!(quantity("555555c"), Ok(("c", Ratio::new(9425_u16, 20736))));
     // however, can get another sixth or quarter of precision:
-    assert_eq!(quantity("555565c"), Ok(("c", Ratio::new(18851u16, 41472))));
+    assert_eq!(quantity("555565c"), Ok(("c", Ratio::new(18851_u16, 41472))));
     // quarter:
-    assert_eq!(quantity("555585c"), Ok(("c", Ratio::new(28277u16, 62208))));
-    assert_eq!(quantity("EEEE7c"), Ok(("c", Ratio::new(1u16, 1))));
-    assert_eq!(quantity("EEEE5c"), Ok(("c", Ratio::new(20735u16, 20736))));
+    assert_eq!(quantity("555585c"), Ok(("c", Ratio::new(28277_u16, 62208))));
+    assert_eq!(quantity("EEEE7c"), Ok(("c", Ratio::new(1_u16, 1))));
+    assert_eq!(quantity("EEEE5c"), Ok(("c", Ratio::new(20735_u16, 20736))));
     // u32 supports all 6 digits of precision
     assert_eq!(
         quantity("EEEEEEc"),
-        Ok(("c", Ratio::new(2985983u32, 2985984)))
+        Ok(("c", Ratio::new(2_985_983_u32, 2_985_984)))
     );
     // round up to 67/100 in base 12
-    assert_eq!(quantity("666c"), Ok(("c", Ratio::new(79u8, 144))))
+    assert_eq!(quantity("666c"), Ok(("c", Ratio::new(79_u8, 144))))
 }
 
 #[test]
@@ -471,11 +469,11 @@ fn parse_direction_blend_success() {
     use num::rational::Ratio;
     assert_eq!(
         direction_blend("34EXRC"),
-        Ok(("C", (ColourChannel::Red, Ratio::new(5902u32, 20736))))
+        Ok(("C", (ColourChannel::Red, Ratio::new(5902_u32, 20736))))
     );
     assert_eq!(
         direction_blend("3GC"),
-        Ok(("C", (ColourChannel::Green, Ratio::new(3u32, 12))))
+        Ok(("C", (ColourChannel::Green, Ratio::new(3_u32, 12))))
     );
 }
 
@@ -779,7 +777,7 @@ fn duodecimal_test() {
     assert_eq!(duodecimal(Ratio::new(6, 12), 4), "6");
     assert_eq!(duodecimal(Ratio::new(11310, 20736), 2), "67"); // 6666 / 10000 in base 12
     assert_eq!(duodecimal(Ratio::new(11310, 20736), 4), "6666"); // same, different prec
-    assert_eq!(duodecimal(Ratio::new(296130, 2985984), 5), "12346"); // 123456 /
+    assert_eq!(duodecimal(Ratio::new(296_130, 2_985_984), 5), "12346"); // 123456 /
                                                                      // 1000000 in
                                                                      // base 12
 }

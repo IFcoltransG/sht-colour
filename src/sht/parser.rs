@@ -12,7 +12,7 @@ use num::{rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Uns
 
 pub fn duodecimal_digit(input: &str) -> IResult<&str, &str> {
     // ensure only one digit is taken
-    let (input, first) = take(1u8)(input)?;
+    let (input, first) = take(1_u8)(input)?;
     // handle errors
     match alt((tag_no_case("X"), tag_no_case("E"), digit1))(first)? {
         ("", result) => Ok((input, result)),
@@ -58,7 +58,7 @@ where
     let new_index = index.checked_add(1)?;
 
     for _ in 0..new_index {
-        number = number.checked_div(&Ratio::from_integer(base.clone()))?
+        number = number.checked_div(&Ratio::from_integer(base.clone()))?;
     }
     Some((new_index, number))
 }
@@ -74,7 +74,7 @@ where
     // calculate number from digits, and store input precision
     let mut digit_folder = fold_many1(
         number_from_digit,
-        || (0u8, Ratio::from_integer(0.into()), None),
+        || (0_u8, Ratio::from_integer(0.into()), None),
         |(length, number, round_up), digit| {
             try_shift_fraction(&base, digit.clone(), length)
                 .and_then(|(length, shifted_digit)| {
@@ -88,9 +88,7 @@ where
     let (input, (length, number, round_up)) = digit_folder(input)?;
     match round_up {
         Some(true) => {
-            let correction = try_shift_fraction(&base, 1.into(), length - 1)
-                .map(|(_, n)| n)
-                .unwrap_or_else(<_>::zero);
+            let correction = try_shift_fraction(&base, 1.into(), length - 1).map_or_else(<_>::zero, |(_, n)| n);
             Ok((input, number + correction))
         }
         _ => Ok((input, number)),
@@ -168,7 +166,7 @@ where
             tint.unwrap_or_else(<_>::zero),
         )
         .map_err(ParsePropertyError::ValueErrors),
-        Ok((remaining, _)) => Err(ParsePropertyError::InputRemaining(remaining.to_string())),
+        Ok((remaining, _)) => Err(ParsePropertyError::InputRemaining(remaining.to_owned())),
         Err(y) => Err(y.into()),
     }
 }

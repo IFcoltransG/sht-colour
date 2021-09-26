@@ -1,9 +1,9 @@
 //! `sht-colour` is for conversions involving SHT colour codes.
 //! SHT codes are an intuitive human-readable text format for colours.
-//! See https://omaitzen.com/sht/spec/ for the specification.
+//! See <https://omaitzen.com/sht/spec/> for the specification.
 //! Supports conversion to and from RGB/hex and parsing from text.
 
-use num::{rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero, checked_pow};
+use num::{checked_pow, rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
 use std::fmt::Debug;
 
 /// Support for RGB colour codes
@@ -24,7 +24,8 @@ where
     T: Integer + Unsigned + CheckedMul + Clone + From<u8>,
 {
     let half = Ratio::new(1.into(), 2.into());
-    let new_denominator = checked_pow(base, exponent).expect("Overflow calculating denominator") - negative_offset;
+    let new_denominator =
+        checked_pow(base, exponent).expect("Overflow calculating denominator") - negative_offset;
     ((ratio_on_unit_interval * new_denominator.clone() + half).trunc()) / new_denominator
 }
 
@@ -39,8 +40,6 @@ where
         tint.clone() + shade * (<Ratio<_>>::one() - tint.clone()),
         tint,
     );
-    eprintln!("MAX: {:?}", max);
-    eprintln!("ROUNDED MAX: {:?}", round(max.clone()));
     let (red, green, blue) = match channel_ratios {
         sht::ChannelRatios::ThreeBrightestChannels => (min.clone(), min.clone(), min),
         sht::ChannelRatios::TwoBrightestChannels { secondary } => match secondary {
@@ -98,31 +97,33 @@ where
     let (red_hex, green_hex, blue_hex) = input.components();
     let mut channels = [(red_hex, 'r'), (green_hex, 'g'), (blue_hex, 'b')];
     channels.sort();
-    let [(min, _), (mid, mid_channel), (max, max_channel)] = channels;
-    let tint = round(min.clone());
-    let shade = if max.is_zero() {
+    let [(minimum, _), (middle, mid_channel), (maximum, max_channel)] = channels;
+    let tint = round(minimum.clone());
+    let shade = if maximum.is_zero() {
         <num::rational::Ratio<_>>::zero()
-    } else if min != max {
-        round((max.clone() - min.clone()) / (<num::rational::Ratio<_>>::one() - min.clone()))
-    } else {
+    } else if minimum == maximum {
         <_>::one()
+    } else {
+        round(
+            (maximum.clone() - minimum.clone())
+                / (<num::rational::Ratio<_>>::one() - minimum.clone()),
+        )
     };
     let channel_ratios;
-    if max > mid {
+    if maximum > middle {
         let primary = char_to_primary(max_channel);
 
-        let direction_blend = if mid > min {
+        // if `middle == minimum`, `direction_blend` set to `None`
+        let direction_blend = (middle > minimum).then(|| {
             let direction = char_to_primary(mid_channel);
-            let blend = (mid - min.clone()) / (max - min);
-            Some((direction, round(blend)))
-        } else {
-            None
-        };
+            let blend = (middle - minimum.clone()) / (maximum - minimum);
+            (direction, round(blend))
+        });
         channel_ratios = sht::ChannelRatios::OneBrightestChannel {
             primary,
             direction_blend,
         };
-    } else if mid > min {
+    } else if middle > minimum {
         let secondary = char_to_secondary(max_channel, mid_channel);
         channel_ratios = sht::ChannelRatios::TwoBrightestChannels { secondary };
     } else {

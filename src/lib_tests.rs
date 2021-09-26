@@ -1,7 +1,7 @@
 #[test]
 fn rgb_to_sht() {
     use super::{rgb::RGB, rgb_to_sht, sht::SHT};
-    for (input, output) in [
+    for (input, output) in &[
         ("#ff0000", "r"),
         ("#aa0000", "8r"),
         ("#ff4040", "r3"),
@@ -14,7 +14,6 @@ fn rgb_to_sht() {
         ("#000000", "0"),
         ("#ffffff", "W"),
     ]
-    .iter()
     {
         assert_eq!(
             rgb_to_sht(&input.parse::<RGB<u32>>().unwrap(), 1),
@@ -26,7 +25,7 @@ fn rgb_to_sht() {
 #[test]
 fn sht_to_rgb() {
     use super::{rgb::RGB, sht::SHT, sht_to_rgb};
-    for (input, output) in [
+    for (input, output) in &[
         ("r", "#ff0000"),
         ("8r", "#aa0000"),
         ("r3", "#ff4040"),
@@ -45,7 +44,6 @@ fn sht_to_rgb() {
         ("0", "#000000"),
         ("W", "#ffffff"),
     ]
-    .iter()
     {
         assert_eq!(
             sht_to_rgb(&input.parse::<SHT<u32>>().unwrap(), 2),

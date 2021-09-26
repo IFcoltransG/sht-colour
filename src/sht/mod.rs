@@ -1,7 +1,5 @@
 use nom::error::Error;
-use num::{
-    rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero,
-};
+use num::{rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero};
 use parser::parse_sht;
 use std::{
     convert::TryInto,
@@ -72,6 +70,33 @@ pub enum SHTValueError {
 }
 
 impl<T: Clone + Integer + Unsigned> SHT<T> {
+    /// Constructs an [`SHT`] value.
+    ///
+    /// # Arguments
+    ///
+    /// * `channel_ratios` - [`ChannelRatios`] value representing the relative
+    ///   strength of colour components in the SHT
+    /// * `shade` - Overall brightness, measured as strength of strongest colour
+    ///   channel relative to weakest
+    /// * `tint` - Lightness, equal to strength of weakest channel
+    ///
+    /// # Example
+    /// ```
+    /// use num::rational::Ratio;
+    /// use sht_colour::sht;
+    ///
+    /// let red_ratio = sht::ChannelRatios::OneBrightestChannel {
+    ///     primary: sht::ColourChannel::Red,
+    ///     direction_blend: None,
+    /// };
+    /// let dark_red =
+    ///     <sht::SHT<u8>>::new(red_ratio, Ratio::new(4, 12), Ratio::from_integer(0)).unwrap();
+    ///
+    /// assert_eq!(dark_red, "4r".parse().unwrap());
+    /// ```
+    ///
+    /// # Errors
+    /// Will return `Err` if the SHT components are incompatible or impossible.
     pub fn new(
         channel_ratios: ChannelRatios<T>,
         shade: Ratio<T>,
@@ -89,10 +114,10 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
     }
 
     pub fn components(&self) -> (ChannelRatios<T>, Ratio<T>, Ratio<T>) {
-        let Self {
-            channel_ratios,
-            shade,
-            tint,
+        let &Self {
+            ref channel_ratios,
+            ref shade,
+            ref tint,
         } = self;
         (channel_ratios.clone(), shade.clone(), tint.clone())
     }
@@ -174,15 +199,14 @@ where
     }
 }
 
-/// Possibly rounds a base 12 number
-/// If round_up, adds 1 to the number
-/// Othewise, leaves number unchanged
-/// Number is a slice of u8 digits
+/// Possibly rounds a base 12 number.
+/// If `round_up`, adds 1 to the number.
+/// Othewise, leaves number unchanged.
+/// Number is a slice of u8 digits.
 fn round(input: &[u8], round_up: bool) -> Vec<u8> {
-    eprintln!("Rounding: {}", round_up);
     if round_up {
         if let Some((&last, rest)) = input.split_last() {
-            let rounded_last = last + 1;
+            let rounded_last = last.checked_add(1).unwrap_or(12);
             if rounded_last >= 12 {
                 round(rest, round_up)
             } else {
@@ -198,7 +222,6 @@ fn round(input: &[u8], round_up: bool) -> Vec<u8> {
     }
 }
 
-
 /// Converts a ratio to a fixed point base 12 string
 fn duodecimal<T>(mut input: Ratio<T>, precision: usize) -> String
 where
@@ -209,7 +232,7 @@ where
     let digit_characters = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'X', 'E'];
     let mut digits = Vec::with_capacity(precision);
     if input >= <_>::one() {
-        return "W".to_string();
+        return "W".to_owned();
     }
     let mut round_up = false;
     for digits_left in (0..precision).rev() {
@@ -222,8 +245,10 @@ where
         }
         let integer_part = scaled.to_integer();
         let next_digit = match integer_part.try_into() {
-            Ok(n) if n < 12 => n as u8,
-            _ => 12u8,
+            Ok(n) if n < 12 => n
+                .try_into()
+                .expect("usize < 12 could not be converted to u8"),
+            _ => 12_u8,
         };
         digits.push(next_digit);
         if input.is_zero() {
@@ -233,7 +258,7 @@ where
     // possibly round up, then convert &[u8] to digit String
     round(&digits, round_up)
         .iter()
-        .map(|&c| digit_characters.get(c as usize).unwrap_or(&'W'))
+        .map(|&c| digit_characters.get(usize::from(c)).unwrap_or(&'W'))
         .collect()
 }
 
@@ -247,14 +272,14 @@ where
 
         let ratio_to_str = |ratio: Ratio<T>| duodecimal(ratio, precision);
         let primary_to_str = |primary| match primary {
-            ColourChannel::Red => "r".to_string(),
-            ColourChannel::Green => "g".to_string(),
-            ColourChannel::Blue => "b".to_string(),
+            ColourChannel::Red => "r".to_owned(),
+            ColourChannel::Green => "g".to_owned(),
+            ColourChannel::Blue => "b".to_owned(),
         };
         let secondary_to_str = |secondary| match secondary {
-            SecondaryColour::Cyan => "c".to_string(),
-            SecondaryColour::Yellow => "y".to_string(),
-            SecondaryColour::Magenta => "m".to_string(),
+            SecondaryColour::Cyan => "c".to_owned(),
+            SecondaryColour::Yellow => "y".to_owned(),
+            SecondaryColour::Magenta => "m".to_owned(),
         };
 
         let (channel_ratios, shade_ratio, tint_ratio) = self.clone().components();
@@ -279,12 +304,12 @@ where
         write!(
             formatter,
             "{}{}{}{}{}{}",
-            shade.map(ratio_to_str).unwrap_or_else(String::new),
-            primary.map(primary_to_str).unwrap_or_else(String::new),
-            blend.map(ratio_to_str).unwrap_or_else(String::new),
-            direction.map(primary_to_str).unwrap_or_else(String::new),
-            secondary.map(secondary_to_str).unwrap_or_else(String::new),
-            tint.map(ratio_to_str).unwrap_or_else(String::new)
+            shade.map_or_else(String::new, ratio_to_str),
+            primary.map_or_else(String::new, primary_to_str),
+            blend.map_or_else(String::new, ratio_to_str),
+            direction.map_or_else(String::new, primary_to_str),
+            secondary.map_or_else(String::new, secondary_to_str),
+            tint.map_or_else(String::new, ratio_to_str)
         )
     }
 }
