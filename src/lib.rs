@@ -1,8 +1,15 @@
+//! `sht-colour` is for conversions involving SHT colour codes.
+//! SHT codes are an intuitive human-readable text format for colours.
+//! See https://omaitzen.com/sht/spec/ for the specification.
+//! Supports conversion to and from RGB/hex and parsing from text.
+
 use num::{rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
 use std::fmt::Debug;
 
-mod rgb;
-mod sht;
+/// Support for RGB colour codes
+pub mod rgb;
+/// Support for SHT colour codes
+pub mod sht;
 
 #[cfg(test)]
 mod lib_tests;
@@ -108,7 +115,7 @@ where
     if max > mid {
         let primary = char_to_primary(max_channel);
 
-        let direction_blend = if mid > min{
+        let direction_blend = if mid > min {
             let direction = char_to_primary(mid_channel);
             let blend = (mid - min.clone()) / (max - min);
             Some((direction, round(blend)))
