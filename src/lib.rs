@@ -29,7 +29,7 @@ mod lib_tests;
 ///   fraction over 0xFF rather than over 0x100, meaning they have one less
 ///   representable value than normal.
 ///
-/// # Errors
+/// # Panics
 /// Will panic if the exponentiation overflows the integer type.
 ///
 /// [`Ratio<T>`]: num::rational::Ratio
@@ -70,12 +70,15 @@ pub fn sht_to_rgb<T>(input: &sht::SHT<T>, precision: usize) -> rgb::RGB<T>
 where
     T: Integer + Unsigned + From<u8> + Clone + CheckedMul,
 {
+    // Round hexadecimal number to precision
     let round = |ratio: Ratio<T>| round_denominator::<T>(ratio, 16.into(), precision, <_>::one());
+
     let (channel_ratios, shade, tint) = input.components();
     let (max, min) = (
         tint.clone() + shade * (<Ratio<_>>::one() - tint.clone()),
         tint,
     );
+
     let (red, green, blue) = match channel_ratios {
         sht::ChannelRatios::ThreeBrightestChannels => (min.clone(), min.clone(), min),
         sht::ChannelRatios::TwoBrightestChannels { secondary } => match secondary {
@@ -126,7 +129,7 @@ fn char_to_primary(c: char) -> sht::ColourChannel {
 /// characters (which represent the primary colours that would add to the
 /// secondary colour).
 ///
-/// # Errors
+/// # Panics
 /// Will panic if the pair does not contain exactly two distinct characters from
 /// `'r'`, `'g'` and `'b'`.
 ///
@@ -157,7 +160,7 @@ fn chars_to_secondary(a: char, b: char) -> sht::SecondaryColour {
 /// assert_eq!(rgb_to_sht(&red_rgb, 1), red_sht);
 /// ```
 ///
-/// # Errors
+/// # Panics
 /// **Panics on overflow!**
 ///
 /// [`SHT`]: sht::SHT
@@ -166,11 +169,14 @@ pub fn rgb_to_sht<T>(input: &rgb::RGB<T>, precision: usize) -> sht::SHT<T>
 where
     T: Integer + Unsigned + Clone + From<u8> + CheckedMul,
 {
+    // Round duodecimal number to precision
     let round = |ratio: Ratio<T>| round_denominator::<T>(ratio, 12.into(), precision, <_>::zero());
+
     let (red_hex, green_hex, blue_hex) = input.components();
     let mut channels = [(red_hex, 'r'), (green_hex, 'g'), (blue_hex, 'b')];
     channels.sort();
     let [(minimum, _), (middle, mid_channel), (maximum, max_channel)] = channels;
+
     let tint = round(minimum.clone());
     let shade = if maximum.is_zero() {
         <num::rational::Ratio<_>>::zero()
@@ -182,6 +188,7 @@ where
                 / (<num::rational::Ratio<_>>::one() - minimum.clone()),
         )
     };
+
     let channel_ratios;
     if maximum > middle {
         let primary = char_to_primary(max_channel);
