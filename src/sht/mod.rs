@@ -25,11 +25,10 @@ use std::{
 ///
 /// # Examples
 /// ```
-/// use num::rational::Ratio;
-/// use sht_colour::sht::{
+/// use sht_colour::{
 ///     ChannelRatios::OneBrightestChannel,
 ///     ColourChannel::{Green, Red},
-///     SHT,
+///     Ratio, SHT,
 /// };
 ///
 /// // Quite red, a bit green, slightly faded
@@ -80,8 +79,7 @@ pub struct SHT<T: Clone + Integer + Unsigned> {
 ///
 /// # Example
 /// ```
-/// use num::rational::Ratio;
-/// use sht_colour::sht::{ChannelRatios::ThreeBrightestChannels, SHT};
+/// use sht_colour::{ChannelRatios::ThreeBrightestChannels, Ratio, SHT};
 ///
 /// let colour = "W".parse::<SHT<_>>().unwrap();
 ///
@@ -224,8 +222,7 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
     ///
     /// # Example
     /// ```
-    /// use num::rational::Ratio;
-    /// use sht_colour::sht::{ChannelRatios::OneBrightestChannel, ColourChannel::Red, SHT};
+    /// use sht_colour::{ChannelRatios::OneBrightestChannel, ColourChannel::Red, Ratio, SHT};
     ///
     /// let red_ratio = OneBrightestChannel {
     ///     primary: Red,
@@ -258,12 +255,12 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
     ///
     /// # Example
     /// ```
-    /// use sht_colour::sht;
+    /// use sht_colour::SHT;
     ///
-    /// let colour = "7r5bE".parse::<sht::SHT<u8>>().unwrap();
+    /// let colour = "7r5bE".parse::<SHT<u8>>().unwrap();
     ///
     /// let (channel_ratios, shade, tint) = colour.clone().components();
-    /// let new_colour = <sht::SHT<_>>::new(channel_ratios, shade, tint).unwrap();
+    /// let new_colour = <SHT<_>>::new(channel_ratios, shade, tint).unwrap();
     ///
     /// assert_eq!(colour, new_colour);
     /// ```
@@ -416,7 +413,7 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
 ///
 /// # Example
 /// ```
-/// use sht_colour::sht::SHT;
+/// use sht_colour::SHT;
 ///
 /// let first_colour = "5r600000".parse::<SHT<u8>>().unwrap();
 /// let second_colour = "500r6".parse::<SHT<u8>>().unwrap();
@@ -476,7 +473,7 @@ fn round(input: &[u8], round_up: bool) -> Vec<u8> {
 ///
 /// # Example
 /// ```ignore
-/// use num::rational::Ratio;
+/// use sht_colour::Ratio;
 ///
 /// assert_eq!(duodecimal(Ratio::new(11310, 20736), 2), "67");
 /// ```
@@ -546,7 +543,7 @@ where
 ///
 /// # Example
 /// ```
-/// use sht_colour::sht::SHT;
+/// use sht_colour::SHT;
 ///
 /// let colour = "8r6g3".parse::<SHT<u8>>().unwrap();
 ///

@@ -5,9 +5,11 @@
 #![warn(missing_docs)]
 #![warn(clippy::all)]
 #![warn(clippy::missing_docs_in_private_items)]
-#![doc(test(attr(deny(warnings))))]
 
-use num::{checked_pow, rational::Ratio, CheckedMul, Integer, Unsigned};
+use num::{checked_pow, CheckedMul, Integer, Unsigned};
+
+pub use num::rational::Ratio;
+pub use sht::{ChannelRatios, ColourChannel, SecondaryColour, SHT};
 
 /// Support for RGB colour codes in hex format
 pub mod rgb;
