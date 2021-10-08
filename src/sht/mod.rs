@@ -261,7 +261,7 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
     ///
     /// let colour = "7r5bE".parse::<sht::SHT<u8>>().unwrap();
     ///
-    /// let (channel_ratios, shade, tint) = colour.components();
+    /// let (channel_ratios, shade, tint) = colour.clone().components();
     /// let new_colour = <sht::SHT<_>>::new(channel_ratios, shade, tint).unwrap();
     ///
     /// assert_eq!(colour, new_colour);

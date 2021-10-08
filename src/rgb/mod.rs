@@ -106,7 +106,7 @@ where
     ///
     /// let colour = "#123456".parse::<rgb::RGB<u16>>().unwrap();
     ///
-    /// let (red, green, blue) = colour.components();
+    /// let (red, green, blue) = colour.clone().components();
     /// let new_colour = <rgb::RGB<_>>::new(red, green, blue);
     ///
     /// assert_eq!(colour, new_colour);

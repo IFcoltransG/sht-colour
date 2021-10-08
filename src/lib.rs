@@ -61,7 +61,7 @@ where
 /// let red_rgb = "#F00".parse::<RGB<u32>>().unwrap();
 /// let red_sht = "r".parse::<SHT<u32>>().unwrap();
 ///
-/// assert_eq!(sht_to_rgb(&red_sht, 1), red_rgb);
+/// assert_eq!(sht_to_rgb(red_sht, 1), red_rgb);
 /// ```
 ///
 /// [`SHT`]: sht::SHT
@@ -157,7 +157,7 @@ fn chars_to_secondary(a: char, b: char) -> sht::SecondaryColour {
 /// let red_sht = "r".parse::<SHT<u32>>().unwrap();
 /// let red_rgb = "#F00".parse::<RGB<u32>>().unwrap();
 ///
-/// assert_eq!(rgb_to_sht(&red_rgb, 1), red_sht);
+/// assert_eq!(rgb_to_sht(red_rgb, 1), red_sht);
 /// ```
 ///
 /// # Panics
