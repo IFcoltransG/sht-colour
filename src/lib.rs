@@ -2,6 +2,10 @@
 //! SHT codes are an intuitive human-readable text format for colours.
 //! See <https://omaitzen.com/sht/spec/> for the specification.
 //! Supports conversion to and from RGB/hex and parsing from text.
+#![warn(missing_docs)]
+#![warn(clippy::all)]
+#![warn(clippy::missing_docs_in_private_items)]
+#![doc(test(attr(deny(warnings))))]
 
 use num::{checked_pow, rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
 
@@ -13,6 +17,22 @@ pub mod sht;
 #[cfg(test)]
 mod lib_tests;
 
+/// Round a ratio to a simpler approximation, in a given base.
+///
+/// # Arguments
+/// * `ratio_on_unit_interval` - A [`Ratio<T>`] between 0 and 1 inclusive, which
+///   will be rounded to a certain precision.
+/// * `base` - The number base to round within.
+/// * `exponent` - How many digits in that base to preserve.
+/// * `negative_offset` - Usually 0. If 1, then subtract one from the
+///   exponentiated base. Useful for hex codes because they are interpreted as a
+///   fraction over 0xFF rather than over 0x100, meaning they have one less
+///   representable value than normal.
+///
+/// # Errors
+/// Will panic if the exponentiation overflows the integer type.
+///
+/// [`Ratio<T>`]: num::rational::Ratio
 fn round_denominator<T>(
     ratio_on_unit_interval: Ratio<T>,
     base: T,
@@ -28,6 +48,24 @@ where
     ((ratio_on_unit_interval * new_denominator.clone() + half).trunc()) / new_denominator
 }
 
+/// Convert a colour from [`SHT`] format to [`RGB`].
+///
+/// # Arguments
+/// * `input` - The SHT value to convert to RGB.
+/// * `precision` - How many hex digits to round the result of conversion to.
+///
+/// # Example
+/// ```
+/// use sht_colour::{rgb::RGB, sht::SHT, sht_to_rgb};
+///
+/// let red_rgb = "#F00".parse::<RGB<u32>>().unwrap();
+/// let red_sht = "r".parse::<SHT<u32>>().unwrap();
+///
+/// assert_eq!(sht_to_rgb(&red_sht, 1), red_rgb);
+/// ```
+///
+/// [`SHT`]: sht::SHT
+/// [`RGB`]: rgb::RGB
 pub fn sht_to_rgb<T>(input: &sht::SHT<T>, precision: usize) -> rgb::RGB<T>
 where
     T: Integer + Unsigned + From<u8> + Clone + CheckedMul,
@@ -69,6 +107,12 @@ where
     rgb::RGB::new(round(red), round(green), round(blue))
 }
 
+/// Return the [`ColourChannel`] corresponding to a lowercase character.
+///
+/// # Errors
+/// Will panic if given a character other than `'r'`, `'g'` or `'b'`.
+///
+/// [`ColourChannel`]: sht::ColourChannel
 fn char_to_primary(c: char) -> sht::ColourChannel {
     match c {
         'r' => sht::ColourChannel::Red,
@@ -78,6 +122,15 @@ fn char_to_primary(c: char) -> sht::ColourChannel {
     }
 }
 
+/// Return the [`SecondaryColour`] corresponding to a pair of lowercase
+/// characters (which represent the primary colours that would add to the
+/// secondary colour).
+///
+/// # Errors
+/// Will panic if the pair does not contain exactly two distinct characters from
+/// `'r'`, `'g'` and `'b'`.
+///
+/// [`SecondaryColour`]: sht::SecondaryColour
 fn char_to_secondary(a: char, b: char) -> sht::SecondaryColour {
     match (a, b) {
         ('g', 'b') | ('b', 'g') => sht::SecondaryColour::Cyan,
@@ -87,6 +140,28 @@ fn char_to_secondary(a: char, b: char) -> sht::SecondaryColour {
     }
 }
 
+/// Convert a colour from [`RGB`] format to [`SHT`].
+///
+/// # Arguments
+/// * `input` - The RGB value to convert to SHT.
+/// * `precision` - How many duodecimal digits to round the result of conversion
+///   to.
+///
+/// # Example
+/// ```
+/// use sht_colour::{rgb::RGB, rgb_to_sht, sht::SHT};
+///
+/// let red_sht = "r".parse::<SHT<u32>>().unwrap();
+/// let red_rgb = "#F00".parse::<RGB<u32>>().unwrap();
+///
+/// assert_eq!(rgb_to_sht(&red_rgb, 1), red_sht);
+/// ```
+///
+/// # Errors
+/// **Panics on overflow!**
+///
+/// [`SHT`]: sht::SHT
+/// [`RGB`]: rgb::RGB
 pub fn rgb_to_sht<T>(input: &rgb::RGB<T>, precision: usize) -> sht::SHT<T>
 where
     T: Integer + Unsigned + Clone + From<u8> + CheckedMul,
