@@ -5,7 +5,7 @@ use std::{
 };
 
 /// Represents possible errors parsing an [`RGB`] hex code from a string.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 #[non_exhaustive]
 pub enum ParseHexError {
     /// The code did not have any characters.
@@ -56,7 +56,7 @@ pub enum ParseHexError {
 /// // The colour's string representation is the same as the original string
 /// assert_eq!(constructed_colour.to_string(), hex_code);
 /// ```
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct RGB<T>
 where
     T: Unsigned + Integer + Clone + CheckedMul,

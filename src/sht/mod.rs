@@ -58,7 +58,7 @@ use std::{
 /// ```
 ///
 /// [`Display` implementation]: SHT#impl-Display
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct SHT<T: Clone + Integer + Unsigned> {
     /// [`ChannelRatios`] value representing the relative strength of colour
     /// components in the SHT.
@@ -93,7 +93,7 @@ pub struct SHT<T: Clone + Integer + Unsigned> {
 ///
 /// assert_eq!(colour.components(), colour_components);
 /// ```
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum ChannelRatios<T: Clone + Integer + Unsigned> {
     /// Represents colours where one channel (either [red], [blue] or [green])
     /// is strictly brighter than the other two.
@@ -142,7 +142,7 @@ pub enum ChannelRatios<T: Clone + Integer + Unsigned> {
 }
 
 /// Represents a primary colour (using additive mixing).
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum ColourChannel {
     /// The colour red.
     Red,
@@ -153,7 +153,7 @@ pub enum ColourChannel {
 }
 
 /// Represents a secondary colour (using additive mixing).
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum SecondaryColour {
     /// The colour cyan, made of green and blue.
     Cyan,
@@ -538,6 +538,43 @@ where
             secondary.map_or_else(String::new, secondary_to_str),
             tint.map_or_else(String::new, ratio_to_str)
         )
+    }
+}
+
+impl<T> Default for SHT<T>
+where
+    T: Clone + Integer + Unsigned + One + Zero,
+{
+    fn default() -> Self {
+        SHT {
+            channel_ratios: ChannelRatios::default(),
+            shade: Ratio::one(),
+            tint: Ratio::zero(),
+        }
+    }
+}
+
+impl<T> Default for ChannelRatios<T>
+where
+    T: Clone + Integer + Unsigned + One + Zero,
+{
+    fn default() -> Self {
+        ChannelRatios::OneBrightestChannel {
+            primary: ColourChannel::default(),
+            direction_blend: None,
+        }
+    }
+}
+
+impl Default for ColourChannel {
+    fn default() -> Self {
+        ColourChannel::Red
+    }
+}
+
+impl Default for SecondaryColour {
+    fn default() -> Self {
+        SecondaryColour::Cyan
     }
 }
 
