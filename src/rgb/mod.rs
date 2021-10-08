@@ -1,4 +1,4 @@
-use num::{checked_pow, rational::Ratio, CheckedMul, Integer, Unsigned};
+use num::{checked_pow, rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
 use std::{
     fmt::{Display, Error, Formatter, Result as FMTResult, UpperHex},
     str::FromStr,
@@ -170,6 +170,19 @@ where
             parse_channel(blue_digits)?,
         );
         Ok(RGB::new(red, green, blue))
+    }
+}
+
+impl<T> Default for RGB<T>
+where
+    T: Unsigned + Integer + Clone + CheckedMul + Zero + One,
+{
+    fn default() -> Self {
+        RGB {
+            red: Ratio::one(),
+            green: Ratio::zero(),
+            blue: Ratio::zero(),
+        }
     }
 }
 
