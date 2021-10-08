@@ -1,3 +1,4 @@
+use super::{rgb, round_denominator};
 use nom::error::Error;
 use num::{rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero};
 use parser::parse_sht;
@@ -344,6 +345,68 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
         } else {
             Err(errors)
         }
+    }
+
+    /// Convert a colour from [`SHT`] format to [`HexRGB`].
+    ///
+    /// # Arguments
+    /// * `precision` - How many hex digits to round the result of conversion
+    ///   to.
+    ///
+    /// # Example
+    /// ```
+    /// use sht_colour::{rgb::HexRGB, sht::SHT};
+    ///
+    /// let red_rgb = "#F00".parse::<HexRGB<u32>>().unwrap();
+    /// let red_sht = "r".parse::<SHT<u32>>().unwrap();
+    ///
+    /// assert_eq!(red_sht.to_rgb(1), red_rgb);
+    /// ```
+    ///
+    /// [`HexRGB`]: rgb::HexRGB
+    pub fn to_rgb(self, precision: usize) -> rgb::HexRGB<T>
+    where
+        T: Integer + Unsigned + From<u8> + Clone + CheckedMul,
+    {
+        // Round hexadecimal number to precision
+        let round =
+            |ratio: Ratio<T>| round_denominator::<T>(ratio, 16.into(), precision, <_>::one());
+
+        let (channel_ratios, shade, tint) = self.components();
+        let (max, min) = (
+            tint.clone() + shade * (<Ratio<_>>::one() - tint.clone()),
+            tint,
+        );
+
+        let (red, green, blue) = match channel_ratios {
+            ChannelRatios::ThreeBrightestChannels => (min.clone(), min.clone(), min),
+            ChannelRatios::TwoBrightestChannels { secondary } => match secondary {
+                SecondaryColour::Cyan => (min, max.clone(), max),
+                SecondaryColour::Yellow => (max.clone(), max, min),
+                SecondaryColour::Magenta => (max.clone(), min, max),
+            },
+            ChannelRatios::OneBrightestChannel {
+                primary,
+                direction_blend,
+            } => {
+                let (mut red, mut green, mut blue) = (min.clone(), min.clone(), min.clone());
+                if let Some((direction, blend)) = direction_blend {
+                    let centremost_channel = min.clone() + blend * (max.clone() - min);
+                    match direction {
+                        ColourChannel::Red => red = centremost_channel,
+                        ColourChannel::Green => green = centremost_channel,
+                        ColourChannel::Blue => blue = centremost_channel,
+                    }
+                };
+                match primary {
+                    ColourChannel::Red => red = max,
+                    ColourChannel::Green => green = max,
+                    ColourChannel::Blue => blue = max,
+                };
+                (red, green, blue)
+            }
+        };
+        rgb::HexRGB::new(round(red), round(green), round(blue))
     }
 }
 

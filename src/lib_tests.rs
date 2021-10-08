@@ -1,6 +1,6 @@
 #[test]
 fn rgb_to_sht() {
-    use super::{rgb::RGB, rgb_to_sht, sht::SHT};
+    use super::{rgb::HexRGB, sht::SHT};
     for (input, output) in &[
         ("#ff0000", "r"),
         ("#aa0000", "8r"),
@@ -13,10 +13,9 @@ fn rgb_to_sht() {
         ("#808080", "6"),
         ("#000000", "0"),
         ("#ffffff", "W"),
-    ]
-    {
+    ] {
         assert_eq!(
-            rgb_to_sht(input.parse::<RGB<u32>>().unwrap(), 1),
+            input.parse::<HexRGB<u32>>().unwrap().to_sht(1),
             output.parse::<SHT<u32>>().unwrap()
         );
     }
@@ -24,7 +23,7 @@ fn rgb_to_sht() {
 
 #[test]
 fn sht_to_rgb() {
-    use super::{rgb::RGB, sht::SHT, sht_to_rgb};
+    use super::{rgb::HexRGB, sht::SHT};
     for (input, output) in &[
         ("r", "#ff0000"),
         ("8r", "#aa0000"),
@@ -43,11 +42,10 @@ fn sht_to_rgb() {
         ("6", "#808080"),
         ("0", "#000000"),
         ("W", "#ffffff"),
-    ]
-    {
+    ] {
         assert_eq!(
-            sht_to_rgb(input.parse::<SHT<u32>>().unwrap(), 2),
-            output.parse::<RGB<u32>>().unwrap()
+            input.parse::<SHT<u32>>().unwrap().to_rgb(2),
+            output.parse::<HexRGB<u32>>().unwrap()
         )
     }
 }
