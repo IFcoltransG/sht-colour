@@ -12,7 +12,7 @@ use num::{rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Uns
 
 /// Accept a duodecimal digit, either a standard numeral from `'0'` to `'9'`, or
 /// `'X'` or `'E'`.
-pub fn duodecimal_digit(input: &str) -> IResult<&str, &str> {
+pub(crate) fn duodecimal_digit(input: &str) -> IResult<&str, &str> {
     // ensure only one digit is taken
     let (input, first) = take(1_u8)(input)?;
     // handle errors
@@ -24,7 +24,7 @@ pub fn duodecimal_digit(input: &str) -> IResult<&str, &str> {
 
 /// Accept base-12 digit, and convert it to an integer, using `'X'` for 10 and
 /// `'E'` for 11.
-pub fn number_from_digit<T>(input: &str) -> IResult<&str, T>
+pub(crate) fn number_from_digit<T>(input: &str) -> IResult<&str, T>
 where
     u8: Into<T>,
 {
@@ -40,7 +40,7 @@ where
 
 /// Accept a lowercase letter representing a secondary colour, either `'c'`,
 /// `'y'` or `'m'`.
-pub fn secondary_colour(input: &str) -> IResult<&str, SecondaryColour> {
+pub(crate) fn secondary_colour(input: &str) -> IResult<&str, SecondaryColour> {
     alt((
         value(SecondaryColour::Cyan, tag_no_case("c")),
         value(SecondaryColour::Yellow, tag_no_case("y")),
@@ -50,7 +50,7 @@ pub fn secondary_colour(input: &str) -> IResult<&str, SecondaryColour> {
 
 /// Accept a lowercase letter representing a primary colour, either `'r'`, `'g'`
 /// or `'b'`.
-pub fn primary_colour(input: &str) -> IResult<&str, ColourChannel> {
+pub(crate) fn primary_colour(input: &str) -> IResult<&str, ColourChannel> {
     alt((
         value(ColourChannel::Red, tag_no_case("r")),
         value(ColourChannel::Green, tag_no_case("g")),
@@ -80,7 +80,7 @@ where
 /// Parse a base-12 number as a ratio between 0 and 1. If the denominator
 /// overflows, the number is rounded so that the denominator is the maximal
 /// power of 12 that does not overflow.
-pub fn quantity<T>(input: &str) -> IResult<&str, Ratio<T>>
+pub(crate) fn quantity<T>(input: &str) -> IResult<&str, Ratio<T>>
 where
     u8: Into<T>,
     T: CheckedMul + CheckedAdd + Clone + Integer,
@@ -115,7 +115,7 @@ where
 
 /// Parse a pair of a blend number and a primary colour representing an [`SHT`]
 /// direction.
-pub fn direction_blend<T>(input: &str) -> IResult<&str, (ColourChannel, Ratio<T>)>
+pub(crate) fn direction_blend<T>(input: &str) -> IResult<&str, (ColourChannel, Ratio<T>)>
 where
     T: Clone + Integer + CheckedMul + CheckedAdd,
     u8: Into<T>,
@@ -125,7 +125,7 @@ where
 }
 
 /// Parse a [`ChannelRatios`] enum from a string.
-pub fn channel_ratios<T>(input: &str) -> IResult<&str, ChannelRatios<T>>
+pub(crate) fn channel_ratios<T>(input: &str) -> IResult<&str, ChannelRatios<T>>
 where
     T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned,
     u8: Into<T>,
@@ -150,7 +150,7 @@ type SHTParts<T> = (Option<Ratio<T>>, ChannelRatios<T>, Option<Ratio<T>>);
 
 /// Parse the components of an [`SHT`] from a string, performing rudimentary
 /// checking for impossible `SHT`s.
-pub fn sht_data<T>(input: &str) -> IResult<&str, SHTParts<T>>
+pub(crate) fn sht_data<T>(input: &str) -> IResult<&str, SHTParts<T>>
 where
     T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned,
     u8: Into<T>,
@@ -184,7 +184,7 @@ where
 /// # Errors
 /// Will return `Err` if the string could not be parsed or if the `SHT` could
 /// not be constructed from whatever values were parsed.
-pub fn parse_sht<T>(input: &str) -> Result<SHT<T>, ParsePropertyError>
+pub(crate) fn parse_sht<T>(input: &str) -> Result<SHT<T>, ParsePropertyError>
 where
     T: Clone + Integer + CheckedMul + CheckedAdd + Unsigned,
     u8: Into<T>,
