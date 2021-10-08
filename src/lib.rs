@@ -131,7 +131,7 @@ fn char_to_primary(c: char) -> sht::ColourChannel {
 /// `'r'`, `'g'` and `'b'`.
 ///
 /// [`SecondaryColour`]: sht::SecondaryColour
-fn char_to_secondary(a: char, b: char) -> sht::SecondaryColour {
+fn chars_to_secondary(a: char, b: char) -> sht::SecondaryColour {
     match (a, b) {
         ('g', 'b') | ('b', 'g') => sht::SecondaryColour::Cyan,
         ('r', 'g') | ('g', 'r') => sht::SecondaryColour::Yellow,
@@ -197,7 +197,7 @@ where
             direction_blend,
         };
     } else if middle > minimum {
-        let secondary = char_to_secondary(max_channel, mid_channel);
+        let secondary = chars_to_secondary(max_channel, mid_channel);
         channel_ratios = sht::ChannelRatios::TwoBrightestChannels { secondary };
     } else {
         channel_ratios = sht::ChannelRatios::ThreeBrightestChannels;
