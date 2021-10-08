@@ -8,7 +8,7 @@ repository = "https://github.com/IFcoltransG/sht-colour"
 readme = "README.md"
 license = "MIT"
 keywords = ["color", "rgb", "colour"]
-categories = ["encoding", "mutlimedia::images", "graphics", "parser-implementations"]
+categories = ["encoding", "multimedia::images", "graphics", "parser-implementations"]
 
 [dependencies]
 num = "0.4"
