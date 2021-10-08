@@ -266,13 +266,13 @@ impl<T: Clone + Integer + Unsigned> SHT<T> {
     ///
     /// assert_eq!(colour, new_colour);
     /// ```
-    pub fn components(&self) -> (ChannelRatios<T>, Ratio<T>, Ratio<T>) {
-        let &Self {
-            ref channel_ratios,
-            ref shade,
-            ref tint,
+    pub fn components(self) -> (ChannelRatios<T>, Ratio<T>, Ratio<T>) {
+        let Self {
+            channel_ratios,
+            shade,
+            tint,
         } = self;
-        (channel_ratios.clone(), shade.clone(), tint.clone())
+        (channel_ratios, shade, tint)
     }
 
     /// Check whether an [`SHT`] is valid according to the criteria on

@@ -111,13 +111,9 @@ where
     ///
     /// assert_eq!(colour, new_colour);
     /// ```
-    pub fn components(&self) -> (Ratio<T>, Ratio<T>, Ratio<T>) {
-        let &Self {
-            ref red,
-            ref green,
-            ref blue,
-        } = self;
-        (red.clone(), green.clone(), blue.clone())
+    pub fn components(self) -> (Ratio<T>, Ratio<T>, Ratio<T>) {
+        let Self { red, green, blue } = self;
+        (red, green, blue)
     }
 }
 
