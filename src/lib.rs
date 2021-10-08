@@ -88,12 +88,12 @@ where
             direction_blend,
         } => {
             let (mut red, mut green, mut blue) = (min.clone(), min.clone(), min.clone());
-            if let Some(direction_blend) = direction_blend {
-                let get_mid = |blend| min.clone() + blend * (max.clone() - min);
-                match direction_blend {
-                    (sht::ColourChannel::Red, blend) => red = get_mid(blend),
-                    (sht::ColourChannel::Green, blend) => green = get_mid(blend),
-                    (sht::ColourChannel::Blue, blend) => blue = get_mid(blend),
+            if let Some((direction, blend)) = direction_blend {
+                let centremost_channel = min.clone() + blend * (max.clone() - min);
+                match direction {
+                    sht::ColourChannel::Red => red = centremost_channel,
+                    sht::ColourChannel::Green => green = centremost_channel,
+                    sht::ColourChannel::Blue => blue = centremost_channel,
                 }
             };
             match primary {
