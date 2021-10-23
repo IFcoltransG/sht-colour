@@ -1,2 +1,2 @@
 # sht-colour
-Conversion tools for SHT colours. Per https://omaitzen.com/sht/spec/
+Conversion tools for SHT colours. Per <https://omaitzen.com/sht/spec/>

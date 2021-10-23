@@ -13,7 +13,7 @@ use std::{
 ///
 /// The SHT colour format is intended to be human-readable and human-writable.
 /// For instance, the code for the colour red is `"r"`, and the code for a dark
-/// yellow is `"3y"`. SHT codes cover the same colour space as RGB codes, but
+/// yellow is `"3y"`. SHT codes cover the same colour space as [`RGB` codes], but
 /// map commonly used colours onto memorable strings.
 ///
 /// Extra precision can usually be expressed by appending characters to an
@@ -31,7 +31,7 @@ use std::{
 ///     Ratio, SHT,
 /// };
 ///
-/// // Quite red, a bit green, slightly faded
+/// // Thid colour is quite red, a bit green, slightly faded
 /// let code = "8r6g3";
 ///
 /// // Parse a colour from a string
@@ -58,6 +58,7 @@ use std::{
 /// ```
 ///
 /// [`Display` implementation]: SHT#impl-Display
+/// [`RGB` codes]: rgb::HexRGB
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct SHT<T: Clone + Integer + Unsigned> {
     /// [`ChannelRatios`] value representing the relative strength of colour
@@ -75,7 +76,7 @@ pub struct SHT<T: Clone + Integer + Unsigned> {
 }
 
 /// Part of an [`SHT`] value, representing data about hues and relative strength
-/// of channels
+/// of channels.
 ///
 /// # Example
 /// ```

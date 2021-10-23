@@ -1,10 +1,12 @@
 use super::{round_denominator, sht};
 use num::{checked_pow, rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
-pub use rgb::RGB;
 use std::{
     fmt::{Display, Error, Formatter, Result as FMTResult, UpperHex},
     str::FromStr,
 };
+
+/// Re-export from the `RGB` crate, representing the RGB pixel.
+pub use rgb::RGB;
 
 /// Represents possible errors parsing an [`HexRGB`] hex code from a string.
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
