@@ -2,6 +2,7 @@
 fn rgb_to_sht() {
     use super::{rgb::HexRGB, sht::SHT};
     for (input, output) in &[
+        // Test cases stolen from spec
         ("#ff0000", "r"),
         ("#aa0000", "8r"),
         ("#ff4040", "r3"),
@@ -25,6 +26,7 @@ fn rgb_to_sht() {
 fn sht_to_rgb() {
     use super::{rgb::HexRGB, sht::SHT};
     for (input, output) in &[
+        // Test cases stolen from spec
         ("r", "#ff0000"),
         ("8r", "#aa0000"),
         ("r3", "#ff4040"),
@@ -51,13 +53,27 @@ fn sht_to_rgb() {
 }
 
 #[test]
-fn rounding_no_offset() {
+fn rounding_up_no_offset() {
     use super::round_denominator;
     use ::num::rational::Ratio;
     assert_eq!(
         round_denominator::<u8>(Ratio::new(2, 3), 2, 2, 0),
         Ratio::new(3, 4)
     );
+    assert_eq!(
+        round_denominator::<u8>(Ratio::new(50, 100), 100, 0, 0),
+        Ratio::new(1, 1)
+    );
+    assert_eq!(
+        round_denominator::<u32>(Ratio::new(100, 100), 100, 2, 0),
+        Ratio::new(1, 1)
+    );
+}
+
+#[test]
+fn rounding_down_no_offset() {
+    use super::round_denominator;
+    use ::num::rational::Ratio;
     assert_eq!(
         round_denominator::<u8>(Ratio::new(1, 100), 2, 1, 0),
         Ratio::new(0, 1)
@@ -71,16 +87,8 @@ fn rounding_no_offset() {
         Ratio::new(0, 1)
     );
     assert_eq!(
-        round_denominator::<u8>(Ratio::new(50, 100), 100, 0, 0),
-        Ratio::new(1, 1)
-    );
-    assert_eq!(
         round_denominator::<u32>(Ratio::new(0, 100), 100, 2, 0),
         Ratio::new(0, 1)
-    );
-    assert_eq!(
-        round_denominator::<u32>(Ratio::new(100, 100), 100, 2, 0),
-        Ratio::new(1, 1)
     );
 }
 
