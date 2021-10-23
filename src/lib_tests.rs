@@ -53,7 +53,7 @@ fn sht_to_rgb() {
 #[test]
 fn rounding_no_offset() {
     use super::round_denominator;
-    use num::rational::Ratio;
+    use ::num::rational::Ratio;
     assert_eq!(
         round_denominator::<u8>(Ratio::new(2, 3), 2, 2, 0),
         Ratio::new(3, 4)
@@ -87,7 +87,7 @@ fn rounding_no_offset() {
 #[test]
 fn rounding_above_threshold() {
     use super::round_denominator;
-    use num::rational::Ratio;
+    use ::num::rational::Ratio;
     assert_eq!(
         round_denominator::<u32>(Ratio::new(1, 3), 10, 1, 0),
         Ratio::new(3, 10)

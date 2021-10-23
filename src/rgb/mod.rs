@@ -1,12 +1,12 @@
 use super::{round_denominator, sht};
-use num::{checked_pow, rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
-use std::{
+use ::num::{checked_pow, rational::Ratio, CheckedMul, Integer, One, Unsigned, Zero};
+use ::std::{
     fmt::{Display, Error, Formatter, Result as FMTResult, UpperHex},
     str::FromStr,
 };
 
 /// Re-export from the `RGB` crate, representing the RGB pixel.
-pub use rgb::RGB;
+pub use ::rgb::RGB;
 
 /// Represents possible errors parsing an [`HexRGB`] hex code from a string.
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -39,7 +39,7 @@ pub enum ParseHexError {
 ///
 /// # Example
 /// ```
-/// use sht_colour::{rgb::HexRGB, Ratio};
+/// use ::sht_colour::{rgb::HexRGB, Ratio};
 ///
 /// // Very bright red, some green, very little blue
 /// let hex_code = "#FF8811";
@@ -84,7 +84,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use sht_colour::{rgb::HexRGB, Ratio};
+    /// use ::sht_colour::{rgb::HexRGB, Ratio};
     ///
     /// let dark_red = <HexRGB<u8>>::new(
     ///     Ratio::new(0x5, 0xF),
@@ -105,7 +105,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use sht_colour::rgb;
+    /// use ::sht_colour::rgb;
     ///
     /// let colour = "#123456".parse::<rgb::HexRGB<u16>>().unwrap();
     ///
@@ -129,7 +129,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use sht_colour::{rgb::HexRGB, sht::SHT};
+    /// use ::sht_colour::{rgb::HexRGB, sht::SHT};
     ///
     /// let red_sht = "r".parse::<SHT<u32>>().unwrap();
     /// let red_rgb = "#F00".parse::<HexRGB<u32>>().unwrap();

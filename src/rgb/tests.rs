@@ -1,7 +1,7 @@
 #[test]
 fn parse_success() {
     use super::HexRGB;
-    use num::rational::Ratio;
+    use ::num::rational::Ratio;
     assert_eq!(
         "#123".parse::<HexRGB<u8>>(),
         Ok(HexRGB::new(

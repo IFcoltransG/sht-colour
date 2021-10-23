@@ -1,5 +1,5 @@
 use super::{ChannelRatios, ColourChannel, ParsePropertyError, SecondaryColour, SHT};
-use nom::{
+use ::nom::{
     branch::alt,
     bytes::complete::{tag_no_case, take},
     character::complete::digit1,
@@ -8,7 +8,7 @@ use nom::{
     sequence::{pair, tuple},
     Finish, IResult,
 };
-use num::{rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero};
+use ::num::{rational::Ratio, CheckedAdd, CheckedDiv, CheckedMul, Integer, One, Unsigned, Zero};
 
 /// Accept a duodecimal digit, either a standard numeral from `'0'` to `'9'`, or
 /// `'X'` or `'E'`.

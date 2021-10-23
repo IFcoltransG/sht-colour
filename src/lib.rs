@@ -5,7 +5,7 @@
 //!
 //! # Example
 //! ```
-//! use sht_colour::{
+//! use ::sht_colour::{
 //!     rgb::{HexRGB, RGB},
 //!     Ratio, SHT,
 //! };
@@ -32,10 +32,10 @@
 #![warn(clippy::all)]
 #![warn(clippy::missing_docs_in_private_items)]
 
-use num::{checked_pow, CheckedMul, Integer, Unsigned};
+use ::num::{checked_pow, CheckedMul, Integer, Unsigned};
 
 /// Re-export from `num` crate, represents the ratio between two numbers.
-pub use num::rational::Ratio;
+pub use ::num::rational::Ratio;
 pub use sht::{ChannelRatios, ColourChannel, SecondaryColour, SHT};
 
 /// Support for RGB colour codes in hex format.
