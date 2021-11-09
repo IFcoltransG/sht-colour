@@ -1,8 +1,6 @@
 # sht-colour
-`sht-colour` is for conversions involving SHT colour codes.
-SHT codes are an intuitive human-readable text format for colours.
-See <https://omaitzen.com/sht/spec/> for the specification.
-Supports conversion to and from RGB/hex and parsing from text.
+`sht-colour` is for conversions involving SHT colour codes. SHT codes are an intuitive human-readable text format for colours. See <https://omaitzen.com/sht/spec/> for the specification. Supports conversion to and from RGB/hex and parsing from text.
+
 ## Example
 ```rust
 use ::sht_colour::{
