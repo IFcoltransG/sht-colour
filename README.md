@@ -1,4 +1,10 @@
 # sht-colour
+
+[![build](https://img.shields.io/github/workflow/status/IFcoltransG/sht-colour/Rust)](https://github.com/IFcoltransG/sht-colour/actions)
+[![docs.rs](https://img.shields.io/docsrs/sht-colour)](https://docs.rs/sht-colour)
+[![crates.io](https://img.shields.io/crates/v/sht-colour)](https://crates.io/crates/sht-colour)
+[![Licence](https://img.shields.io/github/license/IFcoltransG/sht-colour)](https://github.com/IFcoltransG/sht-colour/blob/main/LICENSE)
+
 `sht-colour` is for conversions involving SHT colour codes. SHT codes are an intuitive human-readable text format for colours. See <https://omaitzen.com/sht/spec/> for the specification. Supports conversion to and from RGB/hex and parsing from text.
 
 ## Example
