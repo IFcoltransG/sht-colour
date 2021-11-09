@@ -12,5 +12,5 @@ categories = ["encoding", "multimedia::images", "graphics", "parser-implementati
 
 [dependencies]
 num = "0.4"
-nom = "7.0"
+nom = "7.1"
 rgb = "0.8"
