@@ -1,3 +1,5 @@
+# [MIGRATED TO CODEBERG 2026-10-31](https://codeberg.org/IFcoltransG/sht-colour)
+
 # sht-colour
 
 [![build](https://img.shields.io/github/workflow/status/IFcoltransG/sht-colour/Rust)](https://github.com/IFcoltransG/sht-colour/actions)
